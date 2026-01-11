@@ -5,3 +5,4 @@ twelvelabs
 yt-dlp
 deep-translator
 python-dotenv
+httpx

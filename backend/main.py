@@ -19,6 +19,7 @@ from services import (
     generate_quiz,
     generate_gist,
     generate_feedback,
+    generate_learning_plan,
 )
 
 # Logging
@@ -153,4 +154,36 @@ async def get_feedback(request: FeedbackRequest):
         return feedback
     except Exception as e:
         logger.error(f"[API] /feedback failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class FeedbackData(BaseModel):
+    strengths: List[str]
+    areas_to_improve: List[str]
+    tips: List[str]
+    encouragement: str
+
+
+class LearningPlanRequest(BaseModel):
+    feedback_history: List[FeedbackData]
+
+
+@app.post("/learning-plan")
+async def get_learning_plan(request: LearningPlanRequest):
+    """
+    Generate a personalized learning plan based on all user feedback history.
+    Uses OpenRouter AI to analyze patterns and provide recommendations.
+    """
+    start = datetime.now()
+    try:
+        # Convert to list of dicts
+        feedback_list = [fb.model_dump() for fb in request.feedback_history]
+        
+        plan = generate_learning_plan(feedback_list)
+        
+        logger.info(f"[API] /learning-plan completed in {(datetime.now() - start).total_seconds():.2f}s")
+        
+        return plan
+    except Exception as e:
+        logger.error(f"[API] /learning-plan failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

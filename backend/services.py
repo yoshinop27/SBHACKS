@@ -3,6 +3,7 @@ import time
 import logging
 import json
 import re
+import httpx
 from twelvelabs import TwelveLabs
 from twelvelabs.indexes import IndexesCreateRequestModelsItem
 
@@ -230,4 +231,115 @@ Rules:
         "areas_to_improve": ["Keep practicing with more videos"],
         "tips": ["Try rewatching the video and paying attention to key vocabulary"],
         "encouragement": "Great effort! Every quiz helps you learn."
+    }
+
+
+def generate_learning_plan(all_feedback: list) -> dict:
+    """
+    Use OpenRouter to analyze all user feedback and generate a personalized learning plan.
+    Returns top 3 strengths, top 3 areas to improve, and actionable recommendations.
+    """
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    if not openrouter_key:
+        logger.warning("[LEARNING_PLAN] OPENROUTER_API_KEY not set, using fallback")
+        return _fallback_learning_plan(all_feedback)
+    
+    # Aggregate all strengths and areas to improve
+    all_strengths = []
+    all_areas = []
+    
+    for fb in all_feedback:
+        all_strengths.extend(fb.get("strengths", []))
+        all_areas.extend(fb.get("areas_to_improve", []))
+    
+    prompt = f"""You are a language learning coach. Analyze this student's quiz history and create a personalized learning plan.
+
+QUIZ PERFORMANCE SUMMARY:
+- Total quizzes completed: {len(all_feedback)}
+
+ALL RECORDED STRENGTHS (from individual quizzes):
+{json.dumps(all_strengths, indent=2)}
+
+ALL RECORDED AREAS TO IMPROVE (from individual quizzes):
+{json.dumps(all_areas, indent=2)}
+
+Based on this data, create a comprehensive learning plan. Return ONLY valid JSON with this exact format:
+{{
+    "top_strengths": ["The 3 most consistent strengths this student has demonstrated"],
+    "top_areas_to_improve": ["The 3 most important areas they need to focus on"],
+    "learning_recommendations": ["3-5 specific, actionable recommendations to improve their language skills"],
+    "next_steps": "A brief paragraph describing what they should focus on next",
+    "overall_assessment": "A brief encouraging overall assessment of their progress"
+}}
+
+Rules:
+- Consolidate similar concepts (e.g., "vocabulary" and "word retention" are the same)
+- Prioritize by frequency and importance
+- Be specific and actionable in recommendations
+- Be encouraging but honest
+- Return ONLY the JSON object, no markdown or extra text"""
+
+    try:
+        response = httpx.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {openrouter_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "openai/gpt-4o-mini",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.7,
+            },
+            timeout=30.0,
+        )
+        response.raise_for_status()
+        
+        result = response.json()
+        content = result["choices"][0]["message"]["content"].strip()
+        
+        # Remove markdown code blocks if present
+        if content.startswith("```"):
+            content = re.sub(r'^```(?:json)?\n?', '', content)
+            content = re.sub(r'\n?```$', '', content)
+        
+        plan_data = json.loads(content)
+        
+        if isinstance(plan_data, dict) and "top_strengths" in plan_data:
+            return plan_data
+            
+    except Exception as e:
+        logger.error(f"[LEARNING_PLAN] OpenRouter request failed: {e}")
+    
+    return _fallback_learning_plan(all_feedback)
+
+
+def _fallback_learning_plan(all_feedback: list) -> dict:
+    """Simple frequency-based fallback when OpenRouter is unavailable."""
+    from collections import Counter
+    
+    all_strengths = []
+    all_areas = []
+    
+    for fb in all_feedback:
+        all_strengths.extend(fb.get("strengths", []))
+        all_areas.extend(fb.get("areas_to_improve", []))
+    
+    # Count frequencies
+    strength_counts = Counter(all_strengths)
+    area_counts = Counter(all_areas)
+    
+    top_strengths = [s for s, _ in strength_counts.most_common(3)]
+    top_areas = [a for a, _ in area_counts.most_common(3)]
+    
+    return {
+        "top_strengths": top_strengths if top_strengths else ["Keep practicing to discover your strengths!"],
+        "top_areas_to_improve": top_areas if top_areas else ["Continue learning to identify areas for growth"],
+        "learning_recommendations": [
+            "Watch more videos in your target language",
+            "Practice consistently every day",
+            "Focus on one concept at a time"
+        ],
+        "next_steps": "Keep taking quizzes to build a more comprehensive learning profile. The more you practice, the better we can tailor recommendations to your needs.",
+        "overall_assessment": "You're making progress! Keep up the great work and stay consistent with your practice."
     }

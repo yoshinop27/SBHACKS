@@ -21,10 +21,14 @@ export function Navbar() {
         zIndex: 10,
       }}
     >
-      <div style={{ maxWidth: 980, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ maxWidth: 980, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 16 }}>
         <Link to="/" style={{ fontWeight: 800 }}>
           LanGain
         </Link>
+        <nav style={{ display: 'flex', gap: 16, marginLeft: 24 }}>
+          <Link to="/dashboard" style={{ opacity: 0.8, fontSize: 14 }}>Dashboard</Link>
+          <Link to="/learning-goals" style={{ opacity: 0.8, fontSize: 14 }}>Learning Goals</Link>
+        </nav>
         <div style={{ flex: 1 }} />
         {user?.email ? <span style={{ opacity: 0.8, fontSize: 14 }}>{user.email}</span> : null}
         <button onClick={() => void onLogout()}>Log out</button>

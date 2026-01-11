@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './QuizDisplay.css';
+import { saveFeedback } from '../lib/feedback';
 
 interface QuizQuestion {
     question: string;
@@ -79,6 +80,13 @@ const QuizDisplay: React.FC<QuizDisplayProps> = ({ quiz, videoId }) => {
             if (response.ok) {
                 const feedbackData = await response.json();
                 setFeedback(feedbackData);
+                
+                // Save feedback to Supabase
+                const saveResult = await saveFeedback(feedbackData);
+                
+                if (!saveResult.success) {
+                    console.warn('Failed to save feedback to database:', saveResult.error);
+                }
             } else {
                 console.error('Failed to fetch feedback');
             }
