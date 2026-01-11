@@ -13,6 +13,7 @@ export default function LandingPage() {
   const videoRef = useRef<SVGSVGElement>(null)
   const chatRef = useRef<SVGSVGElement>(null)
   const roadmapRef = useRef<SVGSVGElement>(null)
+  const heroSvgRef = useRef<SVGSVGElement>(null)
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -21,6 +22,151 @@ export default function LandingPage() {
     }
   }, [user, navigate])
 
+  // Hero SVG Animation with zoom effect
+  useEffect(() => {
+    if (!heroSvgRef.current) return
+
+    const videoPlayer = heroSvgRef.current.querySelector('#video-player')
+    const videoScreen = heroSvgRef.current.querySelector('#video-screen')
+    const playButton = heroSvgRef.current.querySelector('#play-button')
+    const subtitles = heroSvgRef.current.querySelector('#subtitles')
+    const character1 = heroSvgRef.current.querySelector('#character-1')
+    const character2 = heroSvgRef.current.querySelector('#character-2')
+    const character3 = heroSvgRef.current.querySelector('#character-3')
+
+    const tl = gsap.timeline({ defaults: { ease: 'back.out(1.7)' } })
+
+    // Video player entrance - zoom out from center
+    tl.from(videoPlayer, {
+      scale: 3,
+      opacity: 0,
+      duration: 1.2,
+      ease: 'power2.out'
+    })
+
+    // Screen zoom effect
+    tl.from(videoScreen, {
+      scale: 1.5,
+      transformOrigin: 'center',
+      duration: 0.6,
+      ease: 'power2.out'
+    }, '-=0.8')
+
+    // Play button fade in (no bounce or pulse)
+    tl.from(playButton, {
+      opacity: 0,
+      duration: 0.4,
+      ease: 'power2.out'
+    }, '-=0.4')
+
+    // Subtitles typewriter effect
+    tl.from(subtitles, {
+      scaleX: 0,
+      transformOrigin: 'left center',
+      duration: 0.5,
+      ease: 'power2.out'
+    }, '-=0.2')
+
+    // Characters jump in one by one
+    tl.from(character1, {
+      y: 100,
+      opacity: 0,
+      duration: 0.6,
+      ease: 'bounce.out'
+    }, '-=0.3')
+
+    tl.from(character2, {
+      y: 100,
+      opacity: 0,
+      duration: 0.7,
+      ease: 'bounce.out'
+    }, '-=0.4')
+
+    tl.from(character3, {
+      y: 100,
+      opacity: 0,
+      duration: 0.6,
+      ease: 'bounce.out'
+    }, '-=0.5')
+
+    // Continuous animations - only for characters
+    gsap.to(character1, {
+      y: -15,
+      duration: 1,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: 2
+    })
+
+    gsap.to(character2, {
+      y: -20,
+      duration: 1.2,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: 2.2
+    })
+
+    gsap.to(character3, {
+      y: -15,
+      duration: 0.9,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: 2.4
+    })
+
+    gsap.to(character1, {
+      rotation: 5,
+      duration: 0.5,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      transformOrigin: 'center',
+      delay: 2.5
+    })
+
+    gsap.to(character2, {
+      rotation: -5,
+      duration: 0.6,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      transformOrigin: 'center',
+      delay: 2.7
+    })
+
+    gsap.to(character3, {
+      rotation: 5,
+      duration: 0.5,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      transformOrigin: 'center',
+      delay: 2.9
+    })
+
+    gsap.to(videoScreen, {
+      attr: { opacity: 0.8 },
+      duration: 2,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: 2
+    })
+
+    gsap.to(subtitles, {
+      opacity: 0.5,
+      duration: 0.8,
+      repeat: -1,
+      yoyo: true,
+      ease: 'power1.inOut',
+      delay: 3
+    })
+  }, [])
+
+  // Features animations
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Video Animation
@@ -160,33 +306,57 @@ export default function LandingPage() {
           {/* Left side - Illustration */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <svg
-              style={{ width: '100%', maxWidth: '450px', animation: 'float 3s ease-in-out infinite' }}
+              ref={heroSvgRef}
+              style={{ width: '100%', maxWidth: '450px' }}
               viewBox="0 0 400 400"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               {/* Video Player */}
-              <rect x="50" y="80" width="300" height="180" rx="12" fill="#646cff" />
-              <rect x="60" y="90" width="280" height="140" rx="8" fill="#535bf2" />
+              <g id="video-player">
+                <rect x="50" y="80" width="300" height="180" rx="12" fill="#646cff" />
+                <rect id="video-screen" x="60" y="90" width="280" height="140" rx="8" fill="#535bf2" />
 
-              {/* Play Button */}
-              <circle cx="200" cy="160" r="30" fill="white" opacity="0.9" />
-              <path d="M190 145 L220 160 L190 175 Z" fill="#535bf2" />
+                {/* Play Button */}
+                <g id="play-button">
+                  <circle cx="200" cy="160" r="30" fill="white" opacity="0.9" />
+                  <path d="M190 145 L220 160 L190 175 Z" fill="#535bf2" />
+                </g>
 
-              {/* Subtitles */}
-              <rect x="80" y="200" width="240" height="20" rx="4" fill="white" opacity="0.8" />
+                {/* Subtitles */}
+                <rect id="subtitles" x="80" y="200" width="240" height="20" rx="4" fill="white" opacity="0.8" />
+              </g>
 
               {/* Characters */}
-              <circle cx="120" cy="320" r="35" fill="#ff9600" />
-              <circle cx="120" cy="310" r="20" fill="#ffc800" />
+              <g id="character-1">
+                <circle cx="120" cy="320" r="35" fill="#ff9600" />
+                <circle cx="120" cy="310" r="20" fill="#ffc800" />
+                <circle cx="110" cy="307" r="4" fill="#3c3c3c" />
+                <circle cx="130" cy="307" r="4" fill="#3c3c3c" />
+                <circle cx="111" cy="305" r="1.5" fill="white" />
+                <circle cx="131" cy="305" r="1.5" fill="white" />
+                <path d="M113 315 Q120 319 127 315" stroke="#3c3c3c" strokeWidth="2" fill="none" strokeLinecap="round" />
+              </g>
 
-              <circle cx="200" cy="330" r="40" fill="#646cff" />
-              <circle cx="200" cy="318" r="22" fill="#535bf2" />
-              <circle cx="195" cy="315" r="5" fill="#3c3c3c" />
-              <circle cx="205" cy="315" r="5" fill="#3c3c3c" />
+              <g id="character-2">
+                <circle cx="200" cy="330" r="40" fill="#646cff" />
+                <circle cx="200" cy="318" r="22" fill="#535bf2" />
+                <circle cx="190" cy="315" r="5" fill="#3c3c3c" />
+                <circle cx="210" cy="315" r="5" fill="#3c3c3c" />
+                <circle cx="191" cy="313" r="2" fill="white" />
+                <circle cx="211" cy="313" r="2" fill="white" />
+                <path d="M193 323 Q200 327 207 323" stroke="#3c3c3c" strokeWidth="2" fill="none" strokeLinecap="round" />
+              </g>
 
-              <circle cx="280" cy="320" r="35" fill="#ce82ff" />
-              <circle cx="280" cy="310" r="20" fill="#e5b8ff" />
+              <g id="character-3">
+                <circle cx="280" cy="320" r="35" fill="#ce82ff" />
+                <circle cx="280" cy="310" r="20" fill="#e5b8ff" />
+                <circle cx="270" cy="307" r="4" fill="#3c3c3c" />
+                <circle cx="290" cy="307" r="4" fill="#3c3c3c" />
+                <circle cx="271" cy="305" r="1.5" fill="white" />
+                <circle cx="291" cy="305" r="1.5" fill="white" />
+                <path d="M273 315 Q280 319 287 315" stroke="#3c3c3c" strokeWidth="2" fill="none" strokeLinecap="round" />
+              </g>
             </svg>
           </div>
 
@@ -430,11 +600,6 @@ export default function LandingPage() {
 
       <style>
         {`
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-          }
-
           @media (max-width: 1024px) {
             .hero-grid {
               grid-template-columns: 1fr !important;

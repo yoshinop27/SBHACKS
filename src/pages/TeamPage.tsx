@@ -69,7 +69,7 @@ export default function TeamPage() {
         return () => ctx.revert()
     }, [])
 
-    const TeamMember = ({ name, university }: { name: string, university: string }) => (
+    const TeamMember = ({ name, university, image }: { name: string, university: string, image: string }) => (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             <div style={{
                 width: '180px',
@@ -79,11 +79,18 @@ export default function TeamPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                overflow: 'hidden'
             }}>
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="#999">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
+                <img 
+                    src={image} 
+                    alt={name}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                    }}
+                />
             </div>
             <div style={{ textAlign: 'center' }}>
                 <h3 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', color: '#3c3c3c' }}>{name}</h3>
@@ -177,10 +184,10 @@ export default function TeamPage() {
                         width: '100%',
                         maxWidth: '600px'
                     }}>
-                        <TeamMember name="Colin Kermode" university="UC Santa Barbara" />
-                        <TeamMember name="Marisol Morales" university="CSU Long Beach" />
-                        <TeamMember name="Winston Ta" university="CSU Long Beach" />
-                        <TeamMember name="Preston Yoshino" university="Grinnell College" />
+                        <TeamMember name="Colin Kermode" university="UC Santa Barbara" image="/team/colin.jpg" />
+                        <TeamMember name="Marisol Morales" university="CSU Long Beach" image="/team/mar.jpg" />
+                        <TeamMember name="Winston Ta" university="CSU Long Beach" image="/team/winston.jpg" />
+                        <TeamMember name="Preston Yoshino" university="Grinnell College" image="/team/preston.jpg" />
                     </div>
                 </section>
 
@@ -292,11 +299,10 @@ export default function TeamPage() {
                         color: '#555',
                         lineHeight: 1.8
                     }}>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                         We are dedicated to creating a language learning app that democratizes language learning improvement for all.
+                        Our team brings together diverse perspectives and expertise to build tools that make language acquisition 
+                        accessible, engaging, and effective. Through innovative AI-powered features and personalized learning paths,
+                        we're breaking down barriers and opening up a world of possibilities for learners everywhere.
                     </p>
                 </div>
             </section>
