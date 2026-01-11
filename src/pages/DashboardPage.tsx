@@ -123,16 +123,17 @@ export default function DashboardPage() {
     setQuizData(null)
   }, [])
 
-  const languageColors: Record<string, { bg: string, text: string, emoji: string }> = {
-    'Spanish': { bg: '#fff3cd', text: '#856404', emoji: '🇪🇸' },
-    'French': { bg: '#cce5ff', text: '#004085', emoji: '🇫🇷' },
-    'German': { bg: '#f8d7da', text: '#721c24', emoji: '🇩🇪' },
-    'Japanese': { bg: '#ffe5ec', text: '#c71f37', emoji: '🇯🇵' },
-    'Korean': { bg: '#e2e3ff', text: '#4a4e69', emoji: '🇰🇷' },
-    'Italian': { bg: '#d4edda', text: '#155724', emoji: '🇮🇹' },
-    'Portuguese': { bg: '#d1ecf1', text: '#0c5460', emoji: '🇧🇷' },
-    'Chinese': { bg: '#ffeaa7', text: '#d63031', emoji: '🇨🇳' },
-    'Unknown': { bg: '#e9ecef', text: '#495057', emoji: '🌍' },
+  const languageColors: Record<string, { bg: string, text: string, code: string }> = {
+    'English': { bg: '#f3e5f5', text: '#4a148c', code: 'us' },
+    'Spanish': { bg: '#fff8e1', text: '#ff6f00', code: 'es' },
+    'French': { bg: '#e3f2fd', text: '#0d47a1', code: 'fr' },
+    'German': { bg: '#fffde7', text: '#f57f17', code: 'de' },
+    'Japanese': { bg: '#ffebee', text: '#b71c1c', code: 'jp' },
+    'Korean': { bg: '#e8eaf6', text: '#1a237e', code: 'kr' },
+    'Italian': { bg: '#e8f5e9', text: '#1b5e20', code: 'it' },
+    'Portuguese': { bg: '#e0f2f1', text: '#004d40', code: 'br' },
+    'Chinese': { bg: '#fbe9e7', text: '#bf360c', code: 'cn' },
+    'Unknown': { bg: '#f5f5f5', text: '#616161', code: 'un' },
   }
 
   return (
@@ -140,20 +141,20 @@ export default function DashboardPage() {
       <Navbar />
       <main style={{ padding: '32px 24px', maxWidth: 1100, margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ 
+        <div style={{
           marginBottom: '2rem',
           textAlign: 'center',
         }}>
-          <h1 style={{ 
-            fontSize: '2.5rem', 
+          <h1 style={{
+            fontSize: '2.5rem',
             marginBottom: '0.5rem',
             color: '#3c3c3c',
           }}>
             <span style={{ marginRight: '12px' }}>📺</span>
             Start Learning
           </h1>
-          <p style={{ 
-            color: '#777', 
+          <p style={{
+            color: '#777',
             fontSize: '1.1rem',
             margin: 0,
           }}>
@@ -163,15 +164,15 @@ export default function DashboardPage() {
 
         {/* Loading State */}
         {rawVideosLoading && (
-          <div style={{ 
-            textAlign: 'center', 
+          <div style={{
+            textAlign: 'center',
             padding: '4rem 2rem',
             background: 'white',
             borderRadius: '20px',
             border: '2px solid #e5e5e5',
           }}>
-            <div style={{ 
-              fontSize: '3rem', 
+            <div style={{
+              fontSize: '3rem',
               marginBottom: '1rem',
               animation: 'bounce 1s infinite',
             }}>🎬</div>
@@ -181,8 +182,8 @@ export default function DashboardPage() {
 
         {/* Error State */}
         {rawVideosError && (
-          <div style={{ 
-            textAlign: 'center', 
+          <div style={{
+            textAlign: 'center',
             padding: '3rem 2rem',
             background: '#fff5f5',
             borderRadius: '20px',
@@ -195,8 +196,8 @@ export default function DashboardPage() {
 
         {/* Empty State */}
         {!rawVideosLoading && !rawVideosError && rawVideos.length === 0 && (
-          <div style={{ 
-            textAlign: 'center', 
+          <div style={{
+            textAlign: 'center',
             padding: '4rem 2rem',
             background: 'white',
             borderRadius: '20px',
@@ -216,7 +217,9 @@ export default function DashboardPage() {
             gap: '1.5rem',
           }}>
             {rawVideos.map((video, index) => {
-              const langConfig = languageColors[video.language] || languageColors['Unknown']
+              // Capitalize first letter to match keys: 'spanish' -> 'Spanish'
+              const normalizedLang = video.language.charAt(0).toUpperCase() + video.language.slice(1).toLowerCase()
+              const langConfig = languageColors[normalizedLang] || languageColors['Unknown']
               return (
                 <button
                   key={video.name}
@@ -303,15 +306,30 @@ export default function DashboardPage() {
                     <span style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '6px',
+                      gap: '8px',
                       fontSize: '0.8rem',
                       background: langConfig.bg,
                       color: langConfig.text,
-                      padding: '6px 12px',
-                      borderRadius: '20px',
+                      padding: '8px 14px',
+                      borderRadius: '12px',
                       fontWeight: 700,
                     }}>
-                      {langConfig.emoji} {video.language}
+                      {langConfig.code !== 'un' ? (
+                        <img
+                          src={`https://flagcdn.com/${langConfig.code}.svg`}
+                          alt={`${video.language} flag`}
+                          style={{
+                            width: '20px',
+                            height: '15px',
+                            objectFit: 'cover',
+                            borderRadius: '3px',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                          }}
+                        />
+                      ) : (
+                        <span>🌍</span>
+                      )}
+                      {video.language}
                     </span>
                   </div>
                 </button>
@@ -383,8 +401,8 @@ export default function DashboardPage() {
             <>
               {quizData.title && (
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <h2 style={{ 
-                    margin: 0, 
+                  <h2 style={{
+                    margin: 0,
                     color: '#3c3c3c',
                     fontSize: '1.5rem',
                   }}>
@@ -393,11 +411,11 @@ export default function DashboardPage() {
                   {quizData.topics && quizData.topics.length > 0 && (
                     <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       {quizData.topics.map((topic: string) => (
-                        <span key={topic} style={{ 
-                          fontSize: '0.8rem', 
+                        <span key={topic} style={{
+                          fontSize: '0.8rem',
                           background: '#e2e3ff',
                           color: '#4a4e69',
-                          padding: '6px 12px', 
+                          padding: '6px 12px',
                           borderRadius: '20px',
                           fontWeight: 600,
                         }}>
