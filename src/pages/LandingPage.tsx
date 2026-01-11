@@ -36,6 +36,27 @@ export default function LandingPage() {
         }}>
           LanGain
         </h2>
+        
+        <Link 
+          to="/about" 
+          style={{ 
+            textDecoration: 'none', 
+            color: '#3c3c3c',
+            fontWeight: 700,
+            fontSize: '1rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            transition: 'color 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#646cff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#3c3c3c'
+          }}
+        >
+          About
+        </Link>
       </header>
 
       {/* Hero Section */}
