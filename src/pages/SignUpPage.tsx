@@ -86,8 +86,10 @@ export default function SignUpPage() {
       <p style={{ marginTop: 16 }}>
         Already have an account? <Link to="/login">Log in</Link>
       </p>
+
+      <p style={{ marginTop: 8 }}>
+        <Link to="/">← Back to home</Link>
+      </p>
     </main>
   )
 }
-
-
