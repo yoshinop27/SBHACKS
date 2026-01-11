@@ -12,11 +12,7 @@ function App() {
 
       <Route
         path="/"
-        element={
-          <RequireAuth>
-            <HomePage />
-          </RequireAuth>
-        }
+        element={<HomePage />}
       />
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,0 +1,78 @@
+.video-uploader-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2rem;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tabs button {
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tabs button.active {
+    color: #fff;
+    border-bottom-color: #646cff;
+}
+
+.upload-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.url-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    font-size: 1rem;
+}
+
+.file-input-wrapper {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.upload-button {
+    background: #646cff;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.upload-button:disabled {
+    background: #444;
+    cursor: not-allowed;
+}
+
+.upload-button:hover:not(:disabled) {
+    background: #535bf2;
+}
+
+.error-message {
+    color: #ff6b6b;
+    margin-top: 10px;
+}

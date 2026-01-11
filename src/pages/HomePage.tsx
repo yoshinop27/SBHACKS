@@ -6,6 +6,8 @@ import type { VideoWithScore } from '../types/score'
 import { Navbar } from '../components/Layout/Navbar'
 import { VideoUploadForm } from '../components/Video/VideoUploadForm'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
+import VideoUploader from '../components/VideoUploader'
+import SummaryDisplay from '../components/SummaryDisplay'
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -15,6 +17,10 @@ export default function HomePage() {
   const [videosWithScores, setVideosWithScores] = useState<VideoWithScore[]>([])
   const [videosLoading, setVideosLoading] = useState(false)
   const [videosError, setVideosError] = useState<string | null>(null)
+
+  // TwelveLabs State
+  const [summaryData, setSummaryData] = useState<any>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const canCreate = Boolean(user?.id)
 
@@ -47,6 +53,34 @@ export default function HomePage() {
     <div>
       <Navbar />
       <main style={{ padding: 16, maxWidth: 980, margin: '0 auto' }}>
+        {/* TwelveLabs Integrations */}
+        <section style={{ marginBottom: '4rem' }}>
+          <h1>Video Summarizer</h1>
+          <p style={{ opacity: 0.8, marginBottom: '2rem' }}>Upload a video or provide a YouTube link to generate a summary and translation.</p>
+
+          <VideoUploader
+            onUploadSuccess={setSummaryData}
+            onLoading={setIsProcessing}
+          />
+
+          {isProcessing && (
+            <div style={{ textAlign: 'center', margin: '20px 0', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+              <p>Processing video... This may take a minute.</p>
+            </div>
+          )}
+
+          {summaryData && (
+            <SummaryDisplay
+              summary={summaryData.summary}
+              title={summaryData.title}
+              topics={summaryData.topics}
+              hashtags={summaryData.hashtags}
+            />
+          )}
+
+          <hr style={{ opacity: 0.1, margin: '4rem 0' }} />
+        </section>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
           <div>
             <h1 style={{ marginBottom: 4 }}>Your Videos</h1>
@@ -78,7 +112,6 @@ export default function HomePage() {
             <VideoUploadForm
               onSuccess={() => {
                 setIsVideoUploadOpen(false)
-                // Optionally refresh videos list or show success message
               }}
             />
           </div>
