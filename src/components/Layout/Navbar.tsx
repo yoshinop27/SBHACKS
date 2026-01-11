@@ -7,7 +7,7 @@ export function Navbar() {
 
   async function onLogout() {
     await signOut()
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (
