@@ -1,10 +1,12 @@
 import { Dialog } from '@reach/dialog'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchVideosWithScores, fetchRawVideos, type RawVideo } from '../lib/videos'
 import type { VideoWithScore } from '../types/score'
 import { Navbar } from '../components/Layout/Navbar'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
+import { VideoModal } from '../components/Video/VideoModal'
+import { PiPPlayer } from '../components/Video/PiPPlayer'
 import QuizDisplay from '../components/QuizDisplay'
 
 export default function DashboardPage() {
@@ -20,10 +22,23 @@ export default function DashboardPage() {
   const [rawVideosLoading, setRawVideosLoading] = useState(false)
   const [rawVideosError, setRawVideosError] = useState<string | null>(null)
 
-  // TwelveLabs State
+  // TwelveLabs / Quiz State
   const [quizData, setQuizData] = useState<any>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isQuizOpen, setIsQuizOpen] = useState(false)
+
+  // Video playback state
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null)
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  const [isPiPMode, setIsPiPMode] = useState(false)
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0)
+
+  // Ref to track mounted state
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => { mountedRef.current = false }
+  }, [])
 
   // Load raw videos from storage
   useEffect(() => {
@@ -73,8 +88,14 @@ export default function DashboardPage() {
   }, [user?.id])
 
   const handleRawVideoClick = async (video: RawVideo) => {
-    setIsProcessing(true)
+    // Immediately show video modal
+    setCurrentVideoUrl(video.url)
+    setIsVideoModalOpen(true)
+    setIsPiPMode(false)
     setQuizData(null)
+    setIsProcessing(true)
+
+    // Start API call in background
     try {
       const payload = new FormData()
       payload.append('url', video.url)
@@ -90,15 +111,60 @@ export default function DashboardPage() {
       }
 
       const data = await response.json()
-      setQuizData(data)
-      setIsQuizOpen(true)
+      if (mountedRef.current) {
+        setQuizData(data)
+      }
     } catch (err) {
       console.error('Error processing raw video:', err)
-      alert(err instanceof Error ? err.message : 'Failed to process video')
+      if (mountedRef.current) {
+        alert(err instanceof Error ? err.message : 'Failed to process video')
+        setIsVideoModalOpen(false)
+      }
     } finally {
-      setIsProcessing(false)
+      if (mountedRef.current) {
+        setIsProcessing(false)
+      }
     }
   }
+
+  // Handle transition from video modal to PiP + Quiz
+  const handleQuizReady = useCallback(() => {
+    setIsVideoModalOpen(false)
+    setIsPiPMode(true)
+    setIsQuizOpen(true)
+  }, [])
+
+  // Handle expanding PiP back to fullscreen modal
+  const handleExpandPiP = useCallback(() => {
+    setIsPiPMode(false)
+    setIsVideoModalOpen(true)
+  }, [])
+
+  // Handle closing PiP
+  const handleClosePiP = useCallback(() => {
+    setIsPiPMode(false)
+    setCurrentVideoUrl(null)
+  }, [])
+
+  // Handle closing video modal
+  const handleCloseVideoModal = useCallback(() => {
+    setIsVideoModalOpen(false)
+    // If quiz is ready, transition to PiP mode
+    if (quizData) {
+      setIsPiPMode(true)
+      setIsQuizOpen(true)
+    } else {
+      setCurrentVideoUrl(null)
+    }
+  }, [quizData])
+
+  // Handle closing quiz dialog
+  const handleCloseQuiz = useCallback(() => {
+    setIsQuizOpen(false)
+    setIsPiPMode(false)
+    setCurrentVideoUrl(null)
+    setQuizData(null)
+  }, [])
 
   return (
     <div>
@@ -108,23 +174,8 @@ export default function DashboardPage() {
         <section style={{ marginBottom: '4rem' }}>
           <div style={{ marginBottom: '1.5rem' }}>
             <h1 style={{ marginBottom: 4 }}>Raw Videos</h1>
-            <p style={{ marginTop: 0, opacity: 0.8 }}>Click a video to take a language comprehension quiz.</p>
+            <p style={{ marginTop: 0, opacity: 0.8 }}>Click a video to watch and take a language comprehension quiz.</p>
           </div>
-
-          {isProcessing && (
-            <div style={{
-              textAlign: 'center',
-              margin: '24px 0',
-              padding: '24px',
-              background: 'rgba(100, 108, 255, 0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(100, 108, 255, 0.2)'
-            }}>
-              <p style={{ margin: 0, fontSize: '1rem', color: '#646cff' }}>
-                Processing video... This may take a minute.
-              </p>
-            </div>
-          )}
 
           {rawVideosLoading && <p>Loading raw videos…</p>}
           {rawVideosError && (
@@ -220,13 +271,37 @@ export default function DashboardPage() {
           <VideoScoreGallery videos={videosWithScores} />
         ) : null}
 
+        {/* Video Modal - Fullscreen playback */}
+        {currentVideoUrl && (
+          <VideoModal
+            videoUrl={currentVideoUrl}
+            isOpen={isVideoModalOpen}
+            onClose={handleCloseVideoModal}
+            isLoading={isProcessing}
+            quizReady={!!quizData}
+            onQuizReady={handleQuizReady}
+          />
+        )}
+
+        {/* PiP Player - Shows when quiz is active */}
+        {currentVideoUrl && (
+          <PiPPlayer
+            videoUrl={currentVideoUrl}
+            isVisible={isPiPMode}
+            onExpand={handleExpandPiP}
+            onClose={handleClosePiP}
+            currentTime={videoCurrentTime}
+          />
+        )}
+
+        {/* Quiz Dialog */}
         <Dialog
           isOpen={isQuizOpen}
-          onDismiss={() => setIsQuizOpen(false)}
+          onDismiss={handleCloseQuiz}
           aria-label="Language Quiz"
         >
           <button
-            onClick={() => setIsQuizOpen(false)}
+            onClick={handleCloseQuiz}
             style={{
               position: 'absolute',
               top: '1rem',
