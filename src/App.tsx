@@ -14,11 +14,7 @@ function App() {
 
       <Route
         path="/"
-        element={
-          <RequireAuth>
-            <HomePage />
-          </RequireAuth>
-        }
+        element={<HomePage />}
       />
       <Route
         path="/project/:id"

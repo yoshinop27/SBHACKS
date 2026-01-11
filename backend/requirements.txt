@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-multipart
+twelvelabs
+yt-dlp
+deep-translator
+python-dotenv
