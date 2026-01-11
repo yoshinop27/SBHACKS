@@ -1,24 +1,27 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { createVideo, createScore } from '../../lib/videos'
 import type { BackendAPIResponse } from '../../types/video'
 import './UnifiedVideoUpload.css'
 
 type Props = {
   onUploadSuccess: (data: BackendAPIResponse & { title?: string }) => void
   onLoading: (isLoading: boolean) => void
-  onSuccess?: () => void
 }
 
-export function UnifiedVideoUpload({ onUploadSuccess, onLoading, onSuccess }: Props) {
+export function UnifiedVideoUpload({ onUploadSuccess, onLoading }: Props) {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'file' | 'url'>('file')
   const [file, setFile] = useState<File | null>(null)
   const [url, setUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => { mountedRef.current = false }
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       setFile(e.target.files[0])
     }
   }
@@ -28,60 +31,74 @@ export function UnifiedVideoUpload({ onUploadSuccess, onLoading, onSuccess }: Pr
       setError('You must be logged in to upload videos.')
       return
     }
-
+    if (!mountedRef.current) return
+    
     setError(null)
     onLoading(true)
 
     try {
       let apiResponse: BackendAPIResponse & { title?: string }
 
-      // Step 1: Call backend API
-      if (activeTab === 'file' && file) {
+      if (activeTab === 'file') {
+        if (!file) {
+          setError('Please select a file')
+          onLoading(false)
+          return
+        }
+
         const formData = new FormData()
         formData.append('file', file)
+        
         const response = await fetch('http://127.0.0.1:8000/upload', {
           method: 'POST',
           body: formData,
         })
-        if (!response.ok) throw new Error('File upload failed')
-        apiResponse = await response.json()
-      } else if (activeTab === 'url' && url) {
-        const response = await fetch('http://127.0.0.1:8000/upload-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url }),
-        })
-        if (!response.ok) throw new Error('URL upload failed')
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`File upload failed: ${response.status} ${errorText}`)
+        }
+        
         apiResponse = await response.json()
       } else {
-        setError('Please select a file or enter a URL')
-        onLoading(false)
-        return
+        if (!url.trim()) {
+          setError('Please paste a video URL')
+          onLoading(false)
+          return
+        }
+
+        const payload = new FormData()
+        payload.append('url', url.trim())
+
+        const response = await fetch('http://127.0.0.1:8000/upload-url', {
+          method: 'POST',
+          body: payload,
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`URL upload failed: ${response.status} ${errorText}`)
+        }
+
+        apiResponse = await response.json()
       }
-
-      // Step 2: Save to Videos table
-      const videoLink = activeTab === 'url' ? url.trim() : `file:${file?.name || 'uploaded'}`
-      const videoId = await createVideo({
-        video_link: videoLink,
-        response_data: apiResponse,
-      })
-
-      // Step 3: Save to Scores table with hardcoded score of 5
-      await createScore(videoId, 5)
-
-      // Step 4: Return data for SummaryDisplay
+      
+      if (!mountedRef.current) return
       onUploadSuccess(apiResponse)
 
-      // Reset form
-      setFile(null)
-      setUrl('')
-      if (onSuccess) {
-        onSuccess()
+      if (mountedRef.current) {
+        setFile(null)
+        setUrl('')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload video.')
+      console.error('Upload error:', err)
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : 'Failed to upload video.')
+      }
     } finally {
-      onLoading(false)
+      if (mountedRef.current) {
+        onLoading(false)
+      }
     }
   }
 
@@ -92,13 +109,13 @@ export function UnifiedVideoUpload({ onUploadSuccess, onLoading, onSuccess }: Pr
           className={activeTab === 'file' ? 'active' : ''}
           onClick={() => setActiveTab('file')}
         >
-          File Uploads
+          File Upload
         </button>
         <button
           className={activeTab === 'url' ? 'active' : ''}
           onClick={() => setActiveTab('url')}
         >
-          URL Uploads
+          URL Upload
         </button>
       </div>
 

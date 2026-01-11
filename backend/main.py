@@ -1,92 +1,124 @@
-from dotenv import load_dotenv
-load_dotenv()
-
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import shutil
 import os
-from services import upload_video_file, download_youtube_video, generate_summary, generate_gist
-from deep_translator import GoogleTranslator
+import shutil
+import logging
+from datetime import datetime
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+# Load env before importing services (so TL_API_KEY is available)
+load_dotenv()
+from services import (
+    upload_video_file,
+    upload_video_url,
+    generate_summary,
+    generate_gist,
+)
+
+# Logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Allow CORS for frontend
+# CORS (open for simplicity; tighten in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For hackathon, allow all. In prod, specify domain.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class YouTubeURL(BaseModel):
-    url: str
-
-class TranslationRequest(BaseModel):
-    text: str
-    target_language: str
 
 @app.get("/")
 def read_root():
     return {"message": "TwelveLabs Video Summarizer Backend"}
 
+
 @app.post("/upload")
-async def upload_video(file: UploadFile = File(...)):
+async def upload_video(
+    file: UploadFile = File(...),
+    instructions: str = Form(default="Provide a concise summary of this video."),
+):
+    """
+    Upload a video file, index it with TwelveLabs, then return summary + gist.
+    """
     temp_file = f"temp_{file.filename}"
-    with open(temp_file, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
+    start = datetime.now()
+
     try:
+        # Save uploaded file to disk
+        with open(temp_file, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Basic validation to avoid broken uploads
+        size_mb = os.path.getsize(temp_file) / (1024 * 1024)
+        if size_mb <= 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+        # Upload to TwelveLabs
         video_id = upload_video_file(temp_file)
-        
-        # Generate summary immediately for simplicity
-        summary = generate_summary(video_id)
+
+        # Generate summary (with optional instructions)
+        prompt = instructions.strip() or "Provide a concise summary of this video."
+        summary = generate_summary(video_id, prompt=prompt)
+
+        # Generate gist (title, topics, hashtags)
         gist = generate_gist(video_id)
-        
+
+        logger.info(f"[API] /upload completed in {(datetime.now() - start).total_seconds():.2f}s")
+
         return {
             "video_id": video_id,
             "summary": summary,
             "title": gist.get("title"),
             "topics": gist.get("topics"),
-            "hashtags": gist.get("hashtags")
+            "hashtags": gist.get("hashtags"),
         }
     except Exception as e:
+        logger.error(f"[API] /upload failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
+
 @app.post("/upload-url")
-async def upload_url(item: YouTubeURL):
+async def upload_video_url_endpoint(
+    url: str = Form(...),
+    instructions: str = Form(default="Provide a concise summary of this video."),
+):
+    """
+    Accept a public video URL (e.g., Supabase signed URL), send to TwelveLabs via video_url.
+    """
+    start = datetime.now()
     try:
-        file_path = download_youtube_video(item.url)
-        video_id = upload_video_file(file_path)
-        
-        summary = generate_summary(video_id)
+        if not url.strip():
+            raise HTTPException(status_code=400, detail="URL is required.")
+
+        # Upload via video_url
+        video_id = upload_video_url(url.strip())
+
+        # Generate summary
+        prompt = instructions.strip() or "Provide a concise summary of this video."
+        summary = generate_summary(video_id, prompt=prompt)
+
+        # Gist
         gist = generate_gist(video_id)
-        
-        # Cleanup downloaded file
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            
+
+        logger.info(f"[API] /upload-url completed in {(datetime.now() - start).total_seconds():.2f}s")
+
         return {
             "video_id": video_id,
             "summary": summary,
             "title": gist.get("title"),
             "topics": gist.get("topics"),
-            "hashtags": gist.get("hashtags")
+            "hashtags": gist.get("hashtags"),
         }
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"[API] /upload-url failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/translate")
-async def translate_text(request: TranslationRequest):
-    try:
-        # Use deep_translator
-        translated = GoogleTranslator(source='auto', target=request.target_language).translate(request.text)
-        return {"translated_text": translated}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
-
-# Add a cleanup cron/startup task if needed to clear old temp files
