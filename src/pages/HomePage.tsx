@@ -12,6 +12,7 @@ import SummaryDisplay from '../components/SummaryDisplay'
 export default function HomePage() {
   const { user } = useAuth()
   const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false)
+  const [isTwelveLabsUploadOpen, setIsTwelveLabsUploadOpen] = useState(false)
   
   // Videos with scores state
   const [videosWithScores, setVideosWithScores] = useState<VideoWithScore[]>([])
@@ -55,13 +56,15 @@ export default function HomePage() {
       <main style={{ padding: 16, maxWidth: 980, margin: '0 auto' }}>
         {/* TwelveLabs Integrations */}
         <section style={{ marginBottom: '4rem' }}>
-          <h1>Video Summarizer</h1>
-          <p style={{ opacity: 0.8, marginBottom: '2rem' }}>Upload a video or provide a YouTube link to generate a summary and translation.</p>
-
-          <VideoUploader
-            onUploadSuccess={setSummaryData}
-            onLoading={setIsProcessing}
-          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: '2rem' }}>
+            <div>
+              <h1 style={{ marginBottom: 4 }}>Video Summarizer</h1>
+              <p style={{ marginTop: 0, opacity: 0.8 }}>Upload a video or provide a YouTube link to generate a summary and translation.</p>
+            </div>
+            <button onClick={() => setIsTwelveLabsUploadOpen(true)}>
+              Upload Video
+            </button>
+          </div>
 
           {isProcessing && (
             <div style={{ textAlign: 'center', margin: '20px 0', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
@@ -113,6 +116,23 @@ export default function HomePage() {
               onSuccess={() => {
                 setIsVideoUploadOpen(false)
               }}
+            />
+          </div>
+        </Dialog>
+
+        <Dialog
+          isOpen={isTwelveLabsUploadOpen}
+          onDismiss={() => setIsTwelveLabsUploadOpen(false)}
+          aria-label="Upload Video for Summarization"
+        >
+          <div style={{ display: 'grid', gap: 12 }}>
+            <h2 style={{ margin: 0 }}>Upload Video for Summarization</h2>
+            <VideoUploader
+              onUploadSuccess={(data) => {
+                setSummaryData(data)
+                setIsTwelveLabsUploadOpen(false)
+              }}
+              onLoading={setIsProcessing}
             />
           </div>
         </Dialog>
