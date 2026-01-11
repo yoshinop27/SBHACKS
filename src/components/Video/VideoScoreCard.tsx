@@ -6,7 +6,8 @@ type Props = {
 }
 
 export function VideoScoreCard({ video, index }: Props) {
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A'
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -30,7 +31,7 @@ export function VideoScoreCard({ video, index }: Props) {
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>Video {index + 1}</div>
             <a
-              href={video.video_link}
+              href={video.url}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -42,13 +43,15 @@ export function VideoScoreCard({ video, index }: Props) {
                 marginBottom: 8,
               }}
             >
-              {video.video_link}
+              {video.url}
             </a>
-            <div style={{ opacity: 0.7, fontSize: '0.85em' }}>Date: {formatDate(video.created_at)}</div>
+            {video.Date ? (
+              <div style={{ opacity: 0.7, fontSize: '0.85em' }}>Date: {formatDate(video.Date)}</div>
+            ) : null}
           </div>
         </div>
 
-        {video.score !== null ? (
+        {video.Score !== null ? (
           <div
             style={{
               padding: 8,
@@ -57,9 +60,9 @@ export function VideoScoreCard({ video, index }: Props) {
               marginTop: 4,
             }}
           >
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>Score: {video.score.toFixed(2)}</div>
-            {video.feedback ? (
-              <div style={{ opacity: 0.85, fontSize: '0.9em' }}>{video.feedback}</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Score: {video.Score}</div>
+            {video.Feedback ? (
+              <div style={{ opacity: 0.85, fontSize: '0.9em' }}>{video.Feedback}</div>
             ) : null}
           </div>
         ) : (

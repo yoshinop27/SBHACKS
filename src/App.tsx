@@ -2,9 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { RequireAuth } from './components/Auth/RequireAuth'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
-import ProjectDetailPage from './pages/ProjectDetailPage'
 import SignUpPage from './pages/SignUpPage'
-import VideoUploadPage from './pages/VideoUploadPage'
 
 function App() {
   return (
@@ -17,22 +15,6 @@ function App() {
         element={
           <RequireAuth>
             <HomePage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/project/:id"
-        element={
-          <RequireAuth>
-            <ProjectDetailPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/upload-video"
-        element={
-          <RequireAuth>
-            <VideoUploadPage />
           </RequireAuth>
         }
       />

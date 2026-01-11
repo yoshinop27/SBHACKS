@@ -33,7 +33,7 @@ export function VideoUploadForm({ onSuccess }: Props) {
         questions: response.questions,
       }
 
-      await createVideo(user.id, {
+      await createVideo({
         video_link: videoLink.trim(),
         response_data: responseData,
       })

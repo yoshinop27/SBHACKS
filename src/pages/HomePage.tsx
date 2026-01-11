@@ -22,12 +22,11 @@ export default function HomePage() {
     if (!user?.id) return
 
     let mounted = true
-    const userId = user.id
     async function loadVideos() {
       setVideosLoading(true)
       setVideosError(null)
       try {
-        const data = await fetchVideosWithScores(userId)
+        const data = await fetchVideosWithScores()
         if (!mounted) return
         setVideosWithScores(data)
       } catch (err) {

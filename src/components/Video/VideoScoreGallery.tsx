@@ -20,7 +20,7 @@ export function VideoScoreGallery({ videos }: Props) {
       }}
     >
       {videos.map((video, index) => (
-        <VideoScoreCard key={`${video.video_link}-${video.created_at}-${index}`} video={video} index={index} />
+        <VideoScoreCard key={`${video.url}-${video.Date || index}-${index}`} video={video} index={index} />
       ))}
     </div>
   )
