@@ -6,3 +6,5 @@ yt-dlp
 deep-translator
 python-dotenv
 httpx
+reportlab
+matplotlib

@@ -20,6 +20,7 @@ from services import (
     generate_gist,
     generate_feedback,
     generate_learning_plan,
+    generate_frenzy_pdf,
 )
 
 # Logging
@@ -186,4 +187,27 @@ async def get_learning_plan(request: LearningPlanRequest):
         return plan
     except Exception as e:
         logger.error(f"[API] /learning-plan failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate-frenzy")
+async def generate_frenzy(language: str = Form(...)):
+    """
+    Generate and download the 14-Day Frenzy PDF for the given language.
+    """
+    from fastapi.responses import FileResponse
+    start = datetime.now()
+    try:
+        pdf_path = generate_frenzy_pdf(language)
+        
+        logger.info(f"[API] /generate-frenzy completed in {(datetime.now() - start).total_seconds():.2f}s")
+        
+        filename = os.path.basename(pdf_path)
+        return FileResponse(
+            path=pdf_path, 
+            filename=filename, 
+            media_type='application/pdf'
+        )
+    except Exception as e:
+        logger.error(f"[API] /generate-frenzy failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

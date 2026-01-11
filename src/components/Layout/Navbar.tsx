@@ -25,10 +25,10 @@ export function Navbar() {
       }}
     >
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Link 
-          to="/dashboard" 
-          style={{ 
-            fontWeight: 800, 
+        <Link
+          to="/dashboard"
+          style={{
+            fontWeight: 800,
             fontSize: '1.5rem',
             color: '#58cc02',
             letterSpacing: '-0.5px',
@@ -41,11 +41,11 @@ export function Navbar() {
           <span style={{ fontSize: '1.75rem' }}>🌱</span>
           LanGain
         </Link>
-        
+
         <nav style={{ display: 'flex', gap: 4, marginLeft: 32 }}>
-          <Link 
-            to="/dashboard" 
-            style={{ 
+          <Link
+            to="/dashboard"
+            style={{
               padding: '10px 20px',
               borderRadius: '12px',
               fontWeight: 700,
@@ -60,9 +60,9 @@ export function Navbar() {
           >
             📺 Learn
           </Link>
-          <Link 
-            to="/learning-goals" 
-            style={{ 
+          <Link
+            to="/learning-goals"
+            style={{
               padding: '10px 20px',
               borderRadius: '12px',
               fontWeight: 700,
@@ -77,12 +77,29 @@ export function Navbar() {
           >
             🎯 Goals
           </Link>
+          <Link
+            to="/frenzy"
+            style={{
+              padding: '10px 20px',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              textDecoration: 'none',
+              color: isActive('/frenzy') ? '#ff4b4b' : '#777',
+              background: isActive('/frenzy') ? 'rgba(255, 75, 75, 0.1)' : 'transparent',
+              transition: 'all 0.2s',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            ✈️ Frenzy
+          </Link>
         </nav>
-        
+
         <div style={{ flex: 1 }} />
-        
+
         {user?.email && (
-          <span style={{ 
+          <span style={{
             padding: '8px 16px',
             background: '#f7f7f7',
             borderRadius: '20px',
@@ -93,8 +110,8 @@ export function Navbar() {
             {user.email}
           </span>
         )}
-        
-        <button 
+
+        <button
           onClick={() => void onLogout()}
           style={{
             padding: '10px 20px',

@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
 import LearningGoalsPage from './pages/LearningGoalsPage'
+import FrenzyPage from './pages/FrenzyPage'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/team" element={<TeamPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/learning-goals" element={<LearningGoalsPage />} />
+      <Route path="/frenzy" element={<FrenzyPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
 
