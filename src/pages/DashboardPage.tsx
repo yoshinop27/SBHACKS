@@ -6,6 +6,7 @@ import type { VideoWithScore } from '../types/score'
 import { Navbar } from '../components/Layout/Navbar'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
 import SummaryDisplay from '../components/SummaryDisplay'
+import QuizDisplay from '../components/QuizDisplay'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -241,12 +242,17 @@ export default function DashboardPage() {
             &times;
           </button>
           {summaryData && (
-            <SummaryDisplay
-              summary={summaryData.summary}
-              title={summaryData.title}
-              topics={summaryData.topics}
-              hashtags={summaryData.hashtags}
-            />
+            <>
+              <SummaryDisplay
+                summary={summaryData.summary}
+                title={summaryData.title}
+                topics={summaryData.topics}
+                hashtags={summaryData.hashtags}
+              />
+              {summaryData.quiz && Array.isArray(summaryData.quiz) && summaryData.quiz.length > 0 && (
+                <QuizDisplay quiz={summaryData.quiz} />
+              )}
+            </>
           )}
         </Dialog>
       </main>
