@@ -4,13 +4,11 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchVideosWithScores, fetchRawVideos, type RawVideo } from '../lib/videos'
 import type { VideoWithScore } from '../types/score'
 import { Navbar } from '../components/Layout/Navbar'
-import { UnifiedVideoUpload } from '../components/Video/UnifiedVideoUpload'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
 import SummaryDisplay from '../components/SummaryDisplay'
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false)
   
   // Videos with scores state
   const [videosWithScores, setVideosWithScores] = useState<VideoWithScore[]>([])
@@ -25,6 +23,7 @@ export default function DashboardPage() {
   // TwelveLabs State
   const [summaryData, setSummaryData] = useState<any>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
 
   // Load raw videos from storage
   useEffect(() => {
@@ -92,6 +91,7 @@ export default function DashboardPage() {
 
       const data = await response.json()
       setSummaryData(data)
+      setIsSummaryOpen(true)
     } catch (err) {
       console.error('Error processing raw video:', err)
       alert(err instanceof Error ? err.message : 'Failed to process video')
@@ -104,16 +104,11 @@ export default function DashboardPage() {
     <div>
       <Navbar />
       <main style={{ padding: 16, maxWidth: 980, margin: '0 auto' }}>
-        {/* TwelveLabs Integrations */}
+        {/* Raw Videos Gallery */}
         <section style={{ marginBottom: '4rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: '2rem' }}>
-            <div>
-              <h1 style={{ marginBottom: 4 }}>Video Summarizer</h1>
-              <p style={{ marginTop: 0, opacity: 0.8 }}>Upload a video file to generate a summary and translation.</p>
-            </div>
-            <button onClick={() => setIsVideoUploadOpen(true)}>
-              Upload Video
-            </button>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h1 style={{ marginBottom: 4 }}>Raw Videos</h1>
+            <p style={{ marginTop: 0, opacity: 0.8 }}>Click a video to generate a summary with 12 Labs.</p>
           </div>
 
           {isProcessing && (
@@ -131,25 +126,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {summaryData ? (
-            <SummaryDisplay
-              summary={summaryData.summary}
-              title={summaryData.title}
-              topics={summaryData.topics}
-              hashtags={summaryData.hashtags}
-            />
-          ) : null}
-
-          <hr style={{ opacity: 0.1, margin: '4rem 0' }} />
-        </section>
-
-        {/* Raw Videos Gallery */}
-        <section style={{ marginBottom: '4rem' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h1 style={{ marginBottom: 4 }}>Raw Videos</h1>
-            <p style={{ marginTop: 0, opacity: 0.8 }}>Click a video to generate a summary with 12 Labs.</p>
-          </div>
-
           {rawVideosLoading && <p>Loading raw videos…</p>}
           {rawVideosError && (
             <div role="alert" style={{ color: 'crimson' }}>{rawVideosError}</div>
@@ -162,7 +138,7 @@ export default function DashboardPage() {
           {!rawVideosLoading && !rawVideosError && rawVideos.length > 0 && (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
               gap: '1rem',
             }}>
               {rawVideos.map((video) => (
@@ -171,23 +147,53 @@ export default function DashboardPage() {
                   onClick={() => handleRawVideoClick(video)}
                   disabled={isProcessing}
                   style={{
-                    padding: '1rem',
-                    background: 'rgba(100, 108, 255, 0.1)',
-                    border: '1px solid rgba(100, 108, 255, 0.3)',
+                    padding: 0,
+                    background: '#242424',
+                    border: '1px solid #333',
                     borderRadius: '8px',
                     cursor: isProcessing ? 'not-allowed' : 'pointer',
                     opacity: isProcessing ? 0.6 : 1,
                     textAlign: 'left',
                     transition: 'all 0.2s',
+                    overflow: 'hidden',
                   }}
                 >
-                  <span style={{ 
-                    display: 'block', 
-                    fontSize: '0.9rem',
-                    wordBreak: 'break-word',
-                  }}>
-                    {video.name}
-                  </span>
+                  <video
+                    src={video.url}
+                    style={{
+                      width: '100%',
+                      aspectRatio: '1 / 1',
+                      objectFit: 'cover',
+                      display: 'block',
+                      pointerEvents: 'none',
+                    }}
+                    preload="metadata"
+                    muted
+                  />
+                  <div style={{ padding: '0.75rem', background: '#1a1a1a' }}>
+                    <span style={{ 
+                      display: 'block', 
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                      color: '#fff',
+                      marginBottom: '0.5rem',
+                      wordBreak: 'break-word',
+                    }}>
+                      {video.displayName}
+                    </span>
+                    <span style={{
+                      display: 'inline-block',
+                      fontSize: '0.7rem',
+                      background: '#333',
+                      color: '#ccc',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      {video.language}
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -215,17 +221,33 @@ export default function DashboardPage() {
         ) : null}
 
         <Dialog
-          isOpen={isVideoUploadOpen}
-          onDismiss={() => setIsVideoUploadOpen(false)}
-          aria-label="Upload Video"
+          isOpen={isSummaryOpen}
+          onDismiss={() => setIsSummaryOpen(false)}
+          aria-label="Video Summary"
         >
-          <UnifiedVideoUpload
-            onUploadSuccess={(data) => setSummaryData(data)}
-            onLoading={(isLoading) => {
-              setIsProcessing(isLoading)
-              if (!isLoading) setIsVideoUploadOpen(false)
+          <button
+            onClick={() => setIsSummaryOpen(false)}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'none',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              opacity: 0.6,
             }}
-          />
+          >
+            &times;
+          </button>
+          {summaryData && (
+            <SummaryDisplay
+              summary={summaryData.summary}
+              title={summaryData.title}
+              topics={summaryData.topics}
+              hashtags={summaryData.hashtags}
+            />
+          )}
         </Dialog>
       </main>
     </div>
