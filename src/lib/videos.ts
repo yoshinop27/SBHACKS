@@ -1,93 +1,42 @@
 import { supabase } from './supabase'
-import type { VideoInsert } from '../types/video'
 import type { VideoWithScore } from '../types/score'
+
+export type RawVideo = { name: string; url: string }
+
+export async function fetchRawVideos(): Promise<RawVideo[]> {
+  const { data: files, error } = await supabase.storage.from('rawVideos').list()
+  if (error) throw error
+
+  const results: RawVideo[] = []
+  for (const file of files ?? []) {
+    if (file.id === null) continue
+    const { data } = await supabase.storage.from('rawVideos').createSignedUrl(file.name, 3600)
+    if (data?.signedUrl) {
+      results.push({ name: file.name, url: data.signedUrl })
+    }
+  }
+  return results
+}
 
 export async function fetchVideosWithScores(): Promise<VideoWithScore[]> {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  if (sessionError) {
-    throw new Error(`Failed to get session: ${sessionError.message}`)
-  }
+  if (sessionError) throw new Error(`Failed to get session: ${sessionError.message}`)
   
   const userId = sessionData.session?.user?.id
-  if (!userId) {
-    throw new Error('No authenticated user session found')
-  }
+  if (!userId) throw new Error('No authenticated user session found')
 
   const { data, error } = await supabase
     .from('Scores')
-    .select(`
-      Score,
-      Feedback,
-      Date,
-      Videos!inner (
-        url
-      )
-    `)
+    .select(`Score, Feedback, Date, Videos!inner (url)`)
     .eq('UserId', userId)
     .order('Date', { ascending: false })
 
   if (error) throw error
   
-  const result: VideoWithScore[] = []
-  for (const row of data ?? []) {
-    const video = (row as any).Videos as { url: string } | null
-    if (video?.url) {
-      result.push({
-        url: video.url,
-        Score: row.Score,
-        Feedback: row.Feedback,
-        Date: row.Date,
-      })
-    }
-  }
-  
-  return result
-}
-
-export async function createVideo(video: VideoInsert): Promise<string> {
-  const { data, error } = await supabase
-    .from('Videos')
-    .insert({
-      url: video.video_link,
-      KeyPoints: video.response_data ?? null,
+  return (data ?? [])
+    .map(row => {
+      const video = (row as any).Videos as { url: string } | null
+      return video?.url ? { url: video.url, Score: row.Score, Feedback: row.Feedback, Date: row.Date } : null
     })
-    .select('videoid')
-    .single()
-
-  if (error) throw error
-  if (!data) throw new Error('Failed to create video: no data returned')
-  return data.videoid
-}
-
-export async function createScore(videoId: string, score: number, feedback?: string): Promise<void> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  if (sessionError) {
-    throw new Error(`Failed to get session: ${sessionError.message}`)
-  }
-  
-  const userId = sessionData.session?.user?.id
-  if (!userId) {
-    throw new Error('No authenticated user session found')
-  }
-
-  const { error } = await supabase
-    .from('Scores')
-    .insert({
-      VideoId: videoId,
-      UserId: userId,
-      Score: score,
-      Feedback: feedback ?? null,
-      Date: new Date().toISOString(),
-    })
-
-  if (error) throw error
-}
-
-export async function processVideoLink(videoLink: string): Promise<{ text: string; questions: string[] }> {
-  const { data, error } = await supabase.functions.invoke('process-video', {
-    body: { video_link: videoLink },
-  })
-
-  if (error) throw error
-  return data as { text: string; questions: string[] }
+    .filter((v): v is VideoWithScore => v !== null)
 }

@@ -7,6 +7,12 @@
     margin-bottom: 0;
 }
 
+.upload-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .tabs {
     display: flex;
     gap: 0;
@@ -37,12 +43,6 @@
     font-weight: 600;
 }
 
-.upload-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
 .url-input {
     width: 100%;
     padding: 12px;
@@ -55,15 +55,26 @@
 
 .file-input-wrapper {
     border: 2px dashed #ccc;
-    padding: 20px;
+    padding: 32px 20px;
     text-align: center;
     border-radius: 8px;
     color: #000;
+    transition: border-color 0.2s ease;
+}
+
+.file-input-wrapper:hover {
+    border-color: #646cff;
+}
+
+.file-input-wrapper input[type="file"] {
+    cursor: pointer;
 }
 
 .file-input-wrapper p {
     color: #000;
-    margin-top: 10px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    opacity: 0.8;
 }
 
 .upload-button {
