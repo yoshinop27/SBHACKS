@@ -7,7 +7,11 @@ export async function fetchProjects(): Promise<Project[]> {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    // Convert Supabase error to Error object with detailed message
+    const errorMsg = error.message || error.code || 'Unknown database error'
+    throw new Error(`Database error: ${errorMsg}${error.details ? ` (${error.details})` : ''}`)
+  }
   return (data ?? []) as Project[]
 }
 

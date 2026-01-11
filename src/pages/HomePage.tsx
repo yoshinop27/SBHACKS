@@ -1,54 +1,48 @@
 import { Dialog } from '@reach/dialog'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Menu, MenuButton, MenuItem, MenuList } from '@reach/menu-button'
 import '@reach/menu-button/styles.css'
 import { useAuth } from '../contexts/AuthContext'
-import { createProject, deleteProject, fetchProjects, updateProject } from '../lib/projects'
+import { deleteProject, updateProject } from '../lib/projects'
 import type { Project } from '../types/project'
 import { DeleteProjectDialog } from '../components/Project/DeleteProjectDialog'
 import { ProjectForm } from '../components/Project/ProjectForm'
 import { ProjectGallery } from '../components/Project/ProjectGallery'
 import { Navbar } from '../components/Layout/Navbar'
+import { VideoUploadForm } from '../components/Video/VideoUploadForm'
 
 type EditState =
-  | { mode: 'create' }
   | { mode: 'edit'; project: Project }
   | { mode: null }
 
 export default function HomePage() {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [projects, setProjects] = useState<Project[]>([])
+  
+  // Dummy projects for now - will be replaced with actual fetching logic later
+  const [projects, setProjects] = useState<Project[]>([
+    {
+      id: '1',
+      user_id: user?.id || '',
+      title: 'Sample Project 1',
+      description: 'This is a sample project description.',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: '2',
+      user_id: user?.id || '',
+      title: 'Sample Project 2',
+      description: 'Another sample project for demonstration.',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ])
 
   const [editState, setEditState] = useState<EditState>({ mode: null })
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null)
+  const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false)
 
-  const isDialogOpen = editState.mode !== null
-  const dialogTitle = editState.mode === 'create' ? 'New project' : editState.mode === 'edit' ? 'Edit project' : ''
-
-  useEffect(() => {
-    let mounted = true
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await fetchProjects()
-        if (!mounted) return
-        setProjects(data)
-      } catch (err) {
-        if (!mounted) return
-        setError(err instanceof Error ? err.message : 'Failed to load projects.')
-      } finally {
-        if (!mounted) return
-        setLoading(false)
-      }
-    }
-    load()
-    return () => {
-      mounted = false
-    }
-  }, [])
+  const isEditDialogOpen = editState.mode !== null
 
   const canCreate = Boolean(user?.id)
 
@@ -59,15 +53,8 @@ export default function HomePage() {
     return undefined
   }, [editState])
 
-  async function handleCreateOrUpdate(value: { title: string; description?: string | null }) {
+  async function handleUpdate(value: { title: string; description?: string | null }) {
     if (!user?.id) throw new Error('Not signed in.')
-
-    if (editState.mode === 'create') {
-      const created = await createProject(user.id, value)
-      setProjects((prev) => [created, ...prev])
-      setEditState({ mode: null })
-      return
-    }
 
     if (editState.mode === 'edit') {
       const updated = await updateProject(editState.project.id, value)
@@ -93,43 +80,54 @@ export default function HomePage() {
             <h1 style={{ marginBottom: 4 }}>Your Projects</h1>
             <p style={{ marginTop: 0, opacity: 0.8 }}>A gallery of your projects (private to your account).</p>
           </div>
-          <button onClick={() => setEditState({ mode: 'create' })} disabled={!canCreate}>
-            New project
+          <button onClick={() => setIsVideoUploadOpen(true)} disabled={!canCreate}>
+            Upload Video
           </button>
         </div>
 
-      {loading ? <p>Loading…</p> : null}
-      {error ? (
-        <div role="alert" style={{ color: 'crimson' }}>
-          {error}
-        </div>
-      ) : null}
+      <ProjectGallery
+        projects={projects}
+        renderActions={(p) => (
+          <Menu>
+            <MenuButton>
+              Actions <span aria-hidden>▾</span>
+            </MenuButton>
+            <MenuList>
+              <MenuItem onSelect={() => setEditState({ mode: 'edit', project: p })}>Edit</MenuItem>
+              <MenuItem onSelect={() => setDeleteTarget(p)}>Delete</MenuItem>
+            </MenuList>
+          </Menu>
+        )}
+      />
 
-      {!loading ? (
-        <ProjectGallery
-          projects={projects}
-          renderActions={(p) => (
-            <Menu>
-              <MenuButton>
-                Actions <span aria-hidden>▾</span>
-              </MenuButton>
-              <MenuList>
-                <MenuItem onSelect={() => setEditState({ mode: 'edit', project: p })}>Edit</MenuItem>
-                <MenuItem onSelect={() => setDeleteTarget(p)}>Delete</MenuItem>
-              </MenuList>
-            </Menu>
-          )}
-        />
-      ) : null}
-
-        <Dialog isOpen={isDialogOpen} onDismiss={() => setEditState({ mode: null })} aria-label={dialogTitle}>
+        <Dialog
+          isOpen={isVideoUploadOpen}
+          onDismiss={() => setIsVideoUploadOpen(false)}
+          aria-label="Upload Video"
+        >
           <div style={{ display: 'grid', gap: 12 }}>
-            <h2 style={{ margin: 0 }}>{dialogTitle}</h2>
+            <h2 style={{ margin: 0 }}>Upload Video</h2>
+            <VideoUploadForm
+              onSuccess={() => {
+                setIsVideoUploadOpen(false)
+                // Optionally refresh projects list or show success message
+              }}
+            />
+          </div>
+        </Dialog>
+
+        <Dialog
+          isOpen={isEditDialogOpen}
+          onDismiss={() => setEditState({ mode: null })}
+          aria-label="Edit project"
+        >
+          <div style={{ display: 'grid', gap: 12 }}>
+            <h2 style={{ margin: 0 }}>Edit project</h2>
             <ProjectForm
-              submitLabel={editState.mode === 'create' ? 'Create' : 'Save'}
+              submitLabel="Save"
               initialValue={formInitialValue}
               onCancel={() => setEditState({ mode: null })}
-              onSubmit={handleCreateOrUpdate}
+              onSubmit={handleUpdate}
             />
           </div>
         </Dialog>
