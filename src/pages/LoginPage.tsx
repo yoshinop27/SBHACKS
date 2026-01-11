@@ -70,8 +70,10 @@ export default function LoginPage() {
       <p style={{ marginTop: 16 }}>
         No account? <Link to="/signup">Sign up</Link>
       </p>
+
+      <p style={{ marginTop: 8 }}>
+        <Link to="/">← Back to home</Link>
+      </p>
     </main>
   )
 }
-
-
