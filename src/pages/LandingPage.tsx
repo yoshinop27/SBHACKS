@@ -1,10 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 export default function LandingPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+
+  const videoRef = useRef<SVGSVGElement>(null)
+  const chatRef = useRef<SVGSVGElement>(null)
+  const roadmapRef = useRef<SVGSVGElement>(null)
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -12,6 +20,56 @@ export default function LandingPage() {
       navigate('/dashboard')
     }
   }, [user, navigate])
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Video Animation
+      if (videoRef.current) {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: videoRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse"
+          }
+        })
+
+        tl.from(".video-frame", { scale: 0.8, opacity: 0, duration: 0.8, ease: "back.out(1.7)" })
+          .from(".play-btn", { scale: 0, opacity: 0, duration: 0.5, ease: "elastic.out(1, 0.5)" }, "-=0.4")
+          .from(".transcription-line", { width: 0, opacity: 0, stagger: 0.2, duration: 0.6, ease: "power2.out" }, "-=0.2")
+      }
+
+      // Chat Animation
+      if (chatRef.current) {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: chatRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse"
+          }
+        })
+
+        tl.from(".chat-bubble", { y: 20, opacity: 0, scale: 0.8, stagger: 0.3, duration: 0.6, ease: "back.out(1.5)" })
+          .to(".typing-dot", { y: -5, stagger: 0.1, repeat: -1, yoyo: true, duration: 0.4 })
+      }
+
+      // Roadmap Animation
+      if (roadmapRef.current) {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: roadmapRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse"
+          }
+        })
+
+        tl.from(".path-line", { strokeDashoffset: 1000, duration: 1.5, ease: "power2.inOut" })
+          .from(".roadmap-node", { scale: 0, opacity: 0, stagger: 0.3, duration: 0.5, ease: "back.out(2)" }, "-=1")
+          .from(".node-check", { opacity: 0, scale: 0, stagger: 0.3, duration: 0.3 }, "-=0.8")
+      }
+    })
+
+    return () => ctx.revert()
+  }, [])
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -37,26 +95,48 @@ export default function LandingPage() {
           LanGain
         </h2>
 
-        <Link
-          to="/about"
-          style={{
-            textDecoration: 'none',
-            color: '#3c3c3c',
-            fontWeight: 700,
-            fontSize: '1rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            transition: 'color 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#646cff'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#3c3c3c'
-          }}
-        >
-          About
-        </Link>
+        <div style={{ display: 'flex', gap: '32px' }}>
+          <Link
+            to="/team"
+            style={{
+              textDecoration: 'none',
+              color: '#3c3c3c',
+              fontWeight: 700,
+              fontSize: '1rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#646cff'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#3c3c3c'
+            }}
+          >
+            Team
+          </Link>
+          <Link
+            to="/about"
+            style={{
+              textDecoration: 'none',
+              color: '#3c3c3c',
+              fontWeight: 700,
+              fontSize: '1rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#646cff'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#3c3c3c'
+            }}
+          >
+            About
+          </Link>
+        </div>
       </header>
 
       {/* Hero Section */}
@@ -200,14 +280,14 @@ export default function LandingPage() {
           margin: '0 auto'
         }}>
           {[
-            { flag: '🇺🇸', name: 'ENGLISH' },
-            { flag: '🇪🇸', name: 'SPANISH' },
-            { flag: '🇫🇷', name: 'FRENCH' },
-            { flag: '🇩🇪', name: 'GERMAN' },
-            { flag: '🇮🇹', name: 'ITALIAN' },
-            { flag: '🇧🇷', name: 'PORTUGUESE' },
-            { flag: '🇯🇵', name: 'JAPANESE' },
-            { flag: '🇰🇷', name: 'KOREAN' }
+            { code: 'us', name: 'ENGLISH' },
+            { code: 'es', name: 'SPANISH' },
+            { code: 'fr', name: 'FRENCH' },
+            { code: 'de', name: 'GERMAN' },
+            { code: 'it', name: 'ITALIAN' },
+            { code: 'br', name: 'PORTUGUESE' },
+            { code: 'jp', name: 'JAPANESE' },
+            { code: 'kr', name: 'KOREAN' }
           ].map((lang) => (
             <div key={lang.name} style={{
               display: 'flex',
@@ -228,7 +308,17 @@ export default function LandingPage() {
                 e.currentTarget.style.background = 'transparent'
                 e.currentTarget.style.color = '#777'
               }}>
-              <div style={{ fontSize: '24px' }}>{lang.flag}</div>
+              <img
+                src={`https://flagcdn.com/${lang.code}.svg`}
+                alt={`${lang.name} flag`}
+                style={{
+                  width: '28px',
+                  height: '21px',
+                  objectFit: 'cover',
+                  borderRadius: '4px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              />
               <span>{lang.name}</span>
             </div>
           ))}
@@ -244,8 +334,18 @@ export default function LandingPage() {
           maxWidth: '1200px',
           margin: '0 auto'
         }}>
+          {/* Feature 1 */}
           <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{ fontSize: '64px', marginBottom: '20px' }}></div>
+            <div style={{ height: '200px', marginBottom: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <svg ref={videoRef} viewBox="0 0 200 150" style={{ width: '100%', height: '100%' }}>
+                <rect className="video-frame" x="20" y="20" width="160" height="100" rx="8" fill="#646cff" />
+                <rect className="video-frame" x="30" y="30" width="140" height="80" rx="4" fill="#535bf2" />
+                <circle className="play-btn" cx="100" cy="70" r="15" fill="white" />
+                <path className="play-btn" d="M96 64 L106 70 L96 76 Z" fill="#646cff" />
+                <rect className="transcription-line" x="40" y="130" width="120" height="4" rx="2" fill="#e5e5e5" />
+                <rect className="transcription-line" x="40" y="140" width="80" height="4" rx="2" fill="#e5e5e5" />
+              </svg>
+            </div>
             <h3 style={{
               fontSize: '1.5rem',
               marginBottom: '12px',
@@ -259,8 +359,19 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* Feature 2 */}
           <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{ fontSize: '64px', marginBottom: '20px' }}></div>
+            <div style={{ height: '200px', marginBottom: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <svg ref={chatRef} viewBox="0 0 200 150" style={{ width: '100%', height: '100%' }}>
+                <path className="chat-bubble" d="M30 40 Q30 30 40 30 L110 30 Q120 30 120 40 L120 70 Q120 80 110 80 L40 80 Q30 80 30 70 L30 85 L50 70 Z" fill="#e5e5e5" />
+                <path className="chat-bubble" d="M170 80 Q170 70 160 70 L90 70 Q80 70 80 80 L80 110 Q80 120 90 120 L160 120 Q170 120 170 110 L170 125 L150 110 Z" fill="#646cff" />
+
+                {/* Typing dots */}
+                <circle className="typing-dot" cx="55" cy="55" r="3" fill="#999" />
+                <circle className="typing-dot" cx="75" cy="55" r="3" fill="#999" />
+                <circle className="typing-dot" cx="95" cy="55" r="3" fill="#999" />
+              </svg>
+            </div>
             <h3 style={{
               fontSize: '1.5rem',
               marginBottom: '12px',
@@ -274,8 +385,23 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* Feature 3 */}
           <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{ fontSize: '64px', marginBottom: '20px' }}></div>
+            <div style={{ height: '200px', marginBottom: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <svg ref={roadmapRef} viewBox="0 0 200 150" style={{ width: '100%', height: '100%' }}>
+                <path className="path-line" d="M30 120 C60 120 60 80 100 80 C140 80 140 30 170 30" fill="none" stroke="#e5e5e5" strokeWidth="4" strokeDasharray="1000" strokeLinecap="round" />
+                <path className="path-line" d="M30 120 C60 120 60 80 100 80 C140 80 140 30 170 30" fill="none" stroke="#646cff" strokeWidth="4" strokeDasharray="1000" strokeLinecap="round" opacity="0.5" />
+
+                <circle className="roadmap-node" cx="30" cy="120" r="10" fill="#646cff" />
+                <path className="node-check" d="M26 120 L29 123 L34 118" stroke="white" strokeWidth="2" fill="none" />
+
+                <circle className="roadmap-node" cx="100" cy="80" r="10" fill="#ce82ff" />
+                <path className="node-check" d="M96 80 L99 83 L104 78" stroke="white" strokeWidth="2" fill="none" />
+
+                <circle className="roadmap-node" cx="170" cy="30" r="10" fill="#ff9600" />
+                <path className="node-check" d="M166 30 L169 33 L174 28" stroke="white" strokeWidth="2" fill="none" />
+              </svg>
+            </div>
             <h3 style={{
               fontSize: '1.5rem',
               marginBottom: '12px',

@@ -55,14 +55,14 @@ export default function AboutPage() {
           })
         }
       }
-      
+
       setOpenAccordion(index)
       const content = accordionRefs.current[index]
       if (content) {
-        gsap.fromTo(content, 
+        gsap.fromTo(content,
           { height: 0, opacity: 0 },
-          { 
-            height: "auto", 
+          {
+            height: "auto",
             opacity: 1,
             duration: 0.4,
             ease: "power2.out"
@@ -116,7 +116,7 @@ export default function AboutPage() {
             ease: "sine.inOut",
             delay: i * 0.1
           })
-          
+
           gsap.to(particle, {
             opacity: Math.random() * 0.4 + 0.3,
             duration: Math.random() * 2 + 1,
@@ -138,7 +138,7 @@ export default function AboutPage() {
             ease: "sine.inOut",
             delay: i * 0.2
           })
-          
+
           gsap.to(symbol, {
             rotation: Math.random() * 20 - 10,
             duration: Math.random() * 4 + 3,
@@ -161,7 +161,7 @@ export default function AboutPage() {
       if (connectionsRef.current) {
         const connections = connectionsRef.current.children
         Array.from(connections).forEach((line, i) => {
-          gsap.fromTo(line, 
+          gsap.fromTo(line,
             { strokeDashoffset: 1000 },
             {
               strokeDashoffset: 0,
@@ -186,7 +186,7 @@ export default function AboutPage() {
             delay: i * 0.3,
             transformOrigin: "center center"
           })
-          
+
           gsap.to(point, {
             opacity: 0.3,
             duration: 1.5,
@@ -215,10 +215,10 @@ export default function AboutPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ 
-        padding: '20px 40px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <header style={{
+        padding: '20px 40px',
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         background: 'white',
         position: 'sticky',
@@ -227,49 +227,72 @@ export default function AboutPage() {
         borderBottom: '2px solid #e5e5e5'
       }}>
         <a href="/" style={{ textDecoration: 'none' }}>
-          <h2 style={{ 
-            margin: 0, 
-            fontSize: '2rem', 
-            fontWeight: 800, 
+          <h2 style={{
+            margin: 0,
+            fontSize: '2rem',
+            fontWeight: 800,
             color: '#646cff',
             letterSpacing: '-1px',
             cursor: 'pointer',
             transition: 'opacity 0.2s'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '0.8'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '1'
-          }}>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '0.8'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '1'
+            }}>
             LanGain
           </h2>
         </a>
-        
-        <a 
-          href="/about"
-          style={{ 
-            textDecoration: 'none', 
-            color: '#646cff',
-            fontWeight: 700,
-            fontSize: '1rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            transition: 'color 0.2s',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#535bf2'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#646cff'
-          }}
-        >
-          About
-        </a>
+
+        <div style={{ display: 'flex', gap: '32px' }}>
+          <a
+            href="/team"
+            style={{
+              textDecoration: 'none',
+              color: '#646cff',
+              fontWeight: 700,
+              fontSize: '1rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              transition: 'color 0.2s',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#535bf2'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#646cff'
+            }}
+          >
+            Team
+          </a>
+          <a
+            href="/about"
+            style={{
+              textDecoration: 'none',
+              color: '#646cff',
+              fontWeight: 700,
+              fontSize: '1rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              transition: 'color 0.2s',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#535bf2'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#646cff'
+            }}
+          >
+            About
+          </a>
+        </div>
       </header>
 
-      <main style={{ 
+      <main style={{
         flex: 1,
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -281,8 +304,8 @@ export default function AboutPage() {
         alignItems: 'center',
         background: 'linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%)'
       }}
-      className="about-grid">
-        <div style={{ 
+        className="about-grid">
+        <div style={{
           padding: '40px',
           display: 'flex',
           flexDirection: 'column',
@@ -298,7 +321,7 @@ export default function AboutPage() {
           }}>
             Our Mission
           </h1>
-          
+
           <p style={{
             fontSize: '1.25rem',
             color: '#646cff',
@@ -315,8 +338,8 @@ export default function AboutPage() {
             lineHeight: 1.8,
             margin: 0
           }}>
-            At LanGain, we believe that language learning should be accessible, engaging, and effective for everyone. 
-            Our platform harnesses the power of AI and real-world content to create personalized learning experiences 
+            At LanGain, we believe that language learning should be accessible, engaging, and effective for everyone.
+            Our platform harnesses the power of AI and real-world content to create personalized learning experiences
             that adapt to your unique goals and interests.
           </p>
 
@@ -326,8 +349,8 @@ export default function AboutPage() {
             lineHeight: 1.8,
             margin: 0
           }}>
-            Whether you're learning for travel, career advancement, or personal enrichment, we're here to support 
-            your journey every step of the way. Join thousands of learners worldwide who are discovering the joy 
+            Whether you're learning for travel, career advancement, or personal enrichment, we're here to support
+            your journey every step of the way. Join thousands of learners worldwide who are discovering the joy
             of mastering new languages with LanGain.
           </p>
 
@@ -353,7 +376,7 @@ export default function AboutPage() {
               gap: '12px'
             }}>
               {accordionItems.map((item, i) => (
-                <div 
+                <div
                   key={i}
                   style={{
                     borderRadius: '12px',
@@ -450,9 +473,9 @@ export default function AboutPage() {
           alignItems: 'center',
           padding: '40px'
         }}>
-          <svg 
+          <svg
             ref={worldRef}
-            viewBox="0 0 600 600" 
+            viewBox="0 0 600 600"
             style={{ width: '100%', maxWidth: '600px', height: 'auto' }}
           >
             <defs>
@@ -461,7 +484,7 @@ export default function AboutPage() {
                 <stop offset="50%" stopColor="#535bf2" stopOpacity="0.7" />
                 <stop offset="100%" stopColor="#3c3c3c" stopOpacity="0.3" />
               </radialGradient>
-              
+
               <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#646cff" stopOpacity="0.3" />
                 <stop offset="100%" stopColor="#646cff" stopOpacity="0" />
@@ -474,12 +497,12 @@ export default function AboutPage() {
               </linearGradient>
             </defs>
 
-            <circle 
+            <circle
               ref={glowRef}
-              cx="300" 
-              cy="300" 
-              r="200" 
-              fill="url(#glowGradient)" 
+              cx="300"
+              cy="300"
+              r="200"
+              fill="url(#glowGradient)"
               opacity="0.2"
             />
 
@@ -503,21 +526,21 @@ export default function AboutPage() {
             </g>
 
             <g ref={connectionsRef}>
-              <line x1="200" y1="200" x2="400" y2="250" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4"/>
-              <line x1="250" y1="380" x2="380" y2="280" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4"/>
-              <line x1="350" y1="200" x2="250" y2="350" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4"/>
-              <line x1="180" y1="300" x2="350" y2="380" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4"/>
+              <line x1="200" y1="200" x2="400" y2="250" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4" />
+              <line x1="250" y1="380" x2="380" y2="280" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4" />
+              <line x1="350" y1="200" x2="250" y2="350" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4" />
+              <line x1="180" y1="300" x2="350" y2="380" stroke="url(#connectionGradient)" strokeWidth="2" strokeDasharray="1000" opacity="0.4" />
             </g>
 
             <g>
               <circle id="globe-base" cx="300" cy="300" r="140" fill="url(#globeGradient)" />
-              
+
               <g opacity="0.9">
                 <path
                   d="M 230 250 Q 220 230, 240 220 Q 260 210, 270 230 L 280 240 Q 290 260, 270 270 Q 250 280, 240 260 Z"
                   fill="#535bf2"
                 />
-                
+
                 <path
                   d="M 260 290 Q 250 310, 265 330 Q 275 345, 280 325 Q 285 305, 270 295 Z"
                   fill="#3c3c3c"
@@ -554,12 +577,12 @@ export default function AboutPage() {
             </g>
 
             <g ref={pulsePointsRef}>
-              <circle cx="200" cy="200" r="6" fill="#ff9600" opacity="0.8"/>
-              <circle cx="400" cy="250" r="6" fill="#ce82ff" opacity="0.8"/>
-              <circle cx="250" cy="380" r="6" fill="#646cff" opacity="0.8"/>
-              <circle cx="380" cy="280" r="6" fill="#ff9600" opacity="0.8"/>
-              <circle cx="350" cy="200" r="6" fill="#ce82ff" opacity="0.8"/>
-              <circle cx="180" cy="300" r="6" fill="#646cff" opacity="0.8"/>
+              <circle cx="200" cy="200" r="6" fill="#ff9600" opacity="0.8" />
+              <circle cx="400" cy="250" r="6" fill="#ce82ff" opacity="0.8" />
+              <circle cx="250" cy="380" r="6" fill="#646cff" opacity="0.8" />
+              <circle cx="380" cy="280" r="6" fill="#ff9600" opacity="0.8" />
+              <circle cx="350" cy="200" r="6" fill="#ce82ff" opacity="0.8" />
+              <circle cx="180" cy="300" r="6" fill="#646cff" opacity="0.8" />
             </g>
 
             <g ref={symbolsRef}>
@@ -574,8 +597,8 @@ export default function AboutPage() {
         </div>
       </main>
 
-      <footer style={{ 
-        padding: '40px', 
+      <footer style={{
+        padding: '40px',
         textAlign: 'center',
         background: '#f7f7f7',
         color: '#999',
