@@ -4,15 +4,13 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchVideosWithScores } from '../lib/videos'
 import type { VideoWithScore } from '../types/score'
 import { Navbar } from '../components/Layout/Navbar'
-import { VideoUploadForm } from '../components/Video/VideoUploadForm'
+import { UnifiedVideoUpload } from '../components/Video/UnifiedVideoUpload'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
-import VideoUploader from '../components/VideoUploader'
 import SummaryDisplay from '../components/SummaryDisplay'
 
 export default function HomePage() {
   const { user } = useAuth()
   const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false)
-  const [isTwelveLabsUploadOpen, setIsTwelveLabsUploadOpen] = useState(false)
   
   // Videos with scores state
   const [videosWithScores, setVideosWithScores] = useState<VideoWithScore[]>([])
@@ -22,8 +20,6 @@ export default function HomePage() {
   // TwelveLabs State
   const [summaryData, setSummaryData] = useState<any>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-
-  const canCreate = Boolean(user?.id)
 
   useEffect(() => {
     if (!user?.id) return
@@ -61,7 +57,7 @@ export default function HomePage() {
               <h1 style={{ marginBottom: 4 }}>Video Summarizer</h1>
               <p style={{ marginTop: 0, opacity: 0.8 }}>Upload a video or provide a YouTube link to generate a summary and translation.</p>
             </div>
-            <button onClick={() => setIsTwelveLabsUploadOpen(true)}>
+            <button onClick={() => setIsVideoUploadOpen(true)}>
               Upload Video
             </button>
           </div>
@@ -89,9 +85,6 @@ export default function HomePage() {
             <h1 style={{ marginBottom: 4 }}>Your Videos</h1>
             <p style={{ marginTop: 0, opacity: 0.8 }}>Your videos and their associated scores and feedback.</p>
           </div>
-          <button onClick={() => setIsVideoUploadOpen(true)} disabled={!canCreate}>
-            Upload Video
-          </button>
         </div>
 
         {videosLoading ? <p>Loading videos…</p> : null}
@@ -110,31 +103,22 @@ export default function HomePage() {
           onDismiss={() => setIsVideoUploadOpen(false)}
           aria-label="Upload Video"
         >
-          <div style={{ display: 'grid', gap: 12 }}>
-            <h2 style={{ margin: 0 }}>Upload Video</h2>
-            <VideoUploadForm
-              onSuccess={() => {
-                setIsVideoUploadOpen(false)
-              }}
-            />
-          </div>
-        </Dialog>
-
-        <Dialog
-          isOpen={isTwelveLabsUploadOpen}
-          onDismiss={() => setIsTwelveLabsUploadOpen(false)}
-          aria-label="Upload Video for Summarization"
-        >
-          <div style={{ display: 'grid', gap: 12 }}>
-            <h2 style={{ margin: 0 }}>Upload Video for Summarization</h2>
-            <VideoUploader
-              onUploadSuccess={(data) => {
-                setSummaryData(data)
-                setIsTwelveLabsUploadOpen(false)
-              }}
-              onLoading={setIsProcessing}
-            />
-          </div>
+          <UnifiedVideoUpload
+            onUploadSuccess={(data) => {
+              setSummaryData(data)
+            }}
+            onLoading={setIsProcessing}
+            onSuccess={async () => {
+              setIsVideoUploadOpen(false)
+              // Refresh videos list
+              try {
+                const data = await fetchVideosWithScores()
+                setVideosWithScores(data)
+              } catch (err) {
+                // Error already handled in fetchVideosWithScores
+              }
+            }}
+          />
         </Dialog>
       </main>
     </div>
