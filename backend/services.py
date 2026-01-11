@@ -110,18 +110,7 @@ def upload_video_url(video_url: str) -> str:
         time.sleep(2)
 
 
-def generate_summary(video_id: str, prompt: str) -> str:
-    """
-    Generate a summary with an optional prompt/instructions.
-    """
-    res = client.summarize(
-        video_id=video_id,
-        type="summary",
-        prompt=prompt,
-    )
-    return res.summary
-
-def generate_quiz(video_id: str, prompt: str) -> list:
+def generate_quiz(video_id: str) -> list:
     """
     Generate structured quiz questions based on the video content.
     Returns a list of question objects with options and correct answer.
@@ -183,3 +172,62 @@ def generate_gist(video_id: str) -> dict:
     """
     res = client.gist(video_id=video_id, types=["title", "topic", "hashtag"])
     return {"title": res.title, "topics": res.topics, "hashtags": res.hashtags}
+
+
+def generate_feedback(video_id: str, correct_answers: list, wrong_answers: list) -> dict:
+    """
+    Generate personalized feedback based on quiz performance.
+    Analyzes language concepts the user understands and needs to improve.
+    """
+    feedback_prompt = f"""Based on this language learning video and the user's quiz results, provide personalized feedback.
+
+QUESTIONS ANSWERED CORRECTLY (concepts they understand well):
+{json.dumps(correct_answers, indent=2)}
+
+QUESTIONS ANSWERED INCORRECTLY (concepts they struggled with):
+{json.dumps(wrong_answers, indent=2)}
+
+Analyze the video content and the quiz results to provide feedback. Return ONLY valid JSON with this exact format:
+{{
+    "strengths": ["List 2-3 specific language concepts or skills they demonstrated understanding of based on correct answers"],
+    "areas_to_improve": ["List 2-3 specific language concepts they need to practice based on wrong answers"],
+    "tips": ["Provide 2-3 actionable tips referencing specific parts of the video to help them improve"],
+    "encouragement": "A brief encouraging message about their progress"
+}}
+
+Rules:
+- Be specific about language concepts (vocabulary, grammar, pronunciation, comprehension, etc.)
+- Reference actual content from the video in your tips
+- If they got everything correct, focus on reinforcing their strengths
+- If they got everything wrong, be extra encouraging
+- Return ONLY the JSON object, no markdown or extra text"""
+
+    res = client.summarize(
+        video_id=video_id,
+        type="summary",
+        prompt=feedback_prompt,
+    )
+    
+    try:
+        response_text = res.summary.strip()
+        
+        # Remove markdown code blocks if present
+        if response_text.startswith("```"):
+            response_text = re.sub(r'^```(?:json)?\n?', '', response_text)
+            response_text = re.sub(r'\n?```$', '', response_text)
+        
+        feedback_data = json.loads(response_text)
+        
+        # Validate structure
+        if isinstance(feedback_data, dict) and "strengths" in feedback_data:
+            return feedback_data
+    except (json.JSONDecodeError, Exception) as e:
+        logger.warning(f"[FEEDBACK] Failed to parse feedback JSON: {e}")
+    
+    # Fallback response
+    return {
+        "strengths": ["You completed the quiz!"],
+        "areas_to_improve": ["Keep practicing with more videos"],
+        "tips": ["Try rewatching the video and paying attention to key vocabulary"],
+        "encouragement": "Great effort! Every quiz helps you learn."
+    }

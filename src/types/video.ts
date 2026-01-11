@@ -5,7 +5,7 @@ export type QuizQuestion = {
 }
 
 export type BackendAPIResponse = {
-  summary: string
+  video_id: string
   quiz: QuizQuestion[]
   title: string
   topics: string[]

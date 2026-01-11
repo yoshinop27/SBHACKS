@@ -200,3 +200,122 @@
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.3);
 }
+
+/* Feedback Section Styles */
+.feedback-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feedback-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #888;
+}
+
+.feedback-loading p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.feedback-encouragement {
+    background: linear-gradient(135deg, rgba(100, 108, 255, 0.15), rgba(72, 209, 204, 0.15));
+    padding: 1.25rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(100, 108, 255, 0.3);
+}
+
+.feedback-encouragement p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #fff;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.feedback-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .feedback-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.feedback-card {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1.25rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feedback-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #fff;
+}
+
+.feedback-card.strengths {
+    border-color: rgba(72, 209, 204, 0.3);
+}
+
+.feedback-card.strengths h4 {
+    color: #48d1cc;
+}
+
+.feedback-card.improvements {
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.feedback-card.improvements h4 {
+    color: #ffc107;
+}
+
+.feedback-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.feedback-card li {
+    color: #ccc;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.feedback-card li:last-child {
+    margin-bottom: 0;
+}
+
+.feedback-tips {
+    background: rgba(100, 108, 255, 0.1);
+    padding: 1.25rem;
+    border-radius: 10px;
+    border: 1px solid rgba(100, 108, 255, 0.2);
+}
+
+.feedback-tips h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #646cff;
+}
+
+.feedback-tips ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.feedback-tips li {
+    color: #ccc;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+.feedback-tips li:last-child {
+    margin-bottom: 0;
+}

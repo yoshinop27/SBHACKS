@@ -5,7 +5,6 @@ import { fetchVideosWithScores, fetchRawVideos, type RawVideo } from '../lib/vid
 import type { VideoWithScore } from '../types/score'
 import { Navbar } from '../components/Layout/Navbar'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
-import SummaryDisplay from '../components/SummaryDisplay'
 import QuizDisplay from '../components/QuizDisplay'
 
 export default function DashboardPage() {
@@ -22,9 +21,9 @@ export default function DashboardPage() {
   const [rawVideosError, setRawVideosError] = useState<string | null>(null)
 
   // TwelveLabs State
-  const [summaryData, setSummaryData] = useState<any>(null)
+  const [quizData, setQuizData] = useState<any>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
+  const [isQuizOpen, setIsQuizOpen] = useState(false)
 
   // Load raw videos from storage
   useEffect(() => {
@@ -75,7 +74,7 @@ export default function DashboardPage() {
 
   const handleRawVideoClick = async (video: RawVideo) => {
     setIsProcessing(true)
-    setSummaryData(null)
+    setQuizData(null)
     try {
       const payload = new FormData()
       payload.append('url', video.url)
@@ -91,8 +90,8 @@ export default function DashboardPage() {
       }
 
       const data = await response.json()
-      setSummaryData(data)
-      setIsSummaryOpen(true)
+      setQuizData(data)
+      setIsQuizOpen(true)
     } catch (err) {
       console.error('Error processing raw video:', err)
       alert(err instanceof Error ? err.message : 'Failed to process video')
@@ -109,7 +108,7 @@ export default function DashboardPage() {
         <section style={{ marginBottom: '4rem' }}>
           <div style={{ marginBottom: '1.5rem' }}>
             <h1 style={{ marginBottom: 4 }}>Raw Videos</h1>
-            <p style={{ marginTop: 0, opacity: 0.8 }}>Click a video to generate a summary with 12 Labs.</p>
+            <p style={{ marginTop: 0, opacity: 0.8 }}>Click a video to take a language comprehension quiz.</p>
           </div>
 
           {isProcessing && (
@@ -222,12 +221,12 @@ export default function DashboardPage() {
         ) : null}
 
         <Dialog
-          isOpen={isSummaryOpen}
-          onDismiss={() => setIsSummaryOpen(false)}
-          aria-label="Video Summary"
+          isOpen={isQuizOpen}
+          onDismiss={() => setIsQuizOpen(false)}
+          aria-label="Language Quiz"
         >
           <button
-            onClick={() => setIsSummaryOpen(false)}
+            onClick={() => setIsQuizOpen(false)}
             style={{
               position: 'absolute',
               top: '1rem',
@@ -241,16 +240,29 @@ export default function DashboardPage() {
           >
             &times;
           </button>
-          {summaryData && (
+          {quizData && (
             <>
-              <SummaryDisplay
-                summary={summaryData.summary}
-                title={summaryData.title}
-                topics={summaryData.topics}
-                hashtags={summaryData.hashtags}
-              />
-              {summaryData.quiz && Array.isArray(summaryData.quiz) && summaryData.quiz.length > 0 && (
-                <QuizDisplay quiz={summaryData.quiz} />
+              {quizData.title && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h2 style={{ margin: 0 }}>{quizData.title}</h2>
+                  {quizData.topics && quizData.topics.length > 0 && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {quizData.topics.map((topic: string) => (
+                        <span key={topic} style={{ 
+                          fontSize: '0.75rem', 
+                          background: '#333', 
+                          padding: '0.25rem 0.5rem', 
+                          borderRadius: '4px' 
+                        }}>
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {quizData.quiz && Array.isArray(quizData.quiz) && quizData.quiz.length > 0 && (
+                <QuizDisplay quiz={quizData.quiz} videoId={quizData.video_id} />
               )}
             </>
           )}
