@@ -6,10 +6,11 @@ import type { VideoWithScore } from '../types/score'
 import { Navbar } from '../components/Layout/Navbar'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
 import SummaryDisplay from '../components/SummaryDisplay'
+import QuizDisplay from '../components/QuizDisplay'
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  
+
   // Videos with scores state
   const [videosWithScores, setVideosWithScores] = useState<VideoWithScore[]>([])
   const [videosLoading, setVideosLoading] = useState(false)
@@ -112,11 +113,11 @@ export default function DashboardPage() {
           </div>
 
           {isProcessing && (
-            <div style={{ 
-              textAlign: 'center', 
-              margin: '24px 0', 
-              padding: '24px', 
-              background: 'rgba(100, 108, 255, 0.1)', 
+            <div style={{
+              textAlign: 'center',
+              margin: '24px 0',
+              padding: '24px',
+              background: 'rgba(100, 108, 255, 0.1)',
               borderRadius: '8px',
               border: '1px solid rgba(100, 108, 255, 0.2)'
             }}>
@@ -171,8 +172,8 @@ export default function DashboardPage() {
                     muted
                   />
                   <div style={{ padding: '0.75rem', background: '#1a1a1a' }}>
-                    <span style={{ 
-                      display: 'block', 
+                    <span style={{
+                      display: 'block',
                       fontSize: '0.9rem',
                       fontWeight: 500,
                       color: '#fff',
@@ -241,12 +242,17 @@ export default function DashboardPage() {
             &times;
           </button>
           {summaryData && (
-            <SummaryDisplay
-              summary={summaryData.summary}
-              title={summaryData.title}
-              topics={summaryData.topics}
-              hashtags={summaryData.hashtags}
-            />
+            <>
+              <SummaryDisplay
+                summary={summaryData.summary}
+                title={summaryData.title}
+                topics={summaryData.topics}
+                hashtags={summaryData.hashtags}
+              />
+              {summaryData.quiz && Array.isArray(summaryData.quiz) && summaryData.quiz.length > 0 && (
+                <QuizDisplay quiz={summaryData.quiz} />
+              )}
+            </>
           )}
         </Dialog>
       </main>

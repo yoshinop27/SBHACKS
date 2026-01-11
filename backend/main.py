@@ -13,6 +13,7 @@ from services import (
     upload_video_file,
     upload_video_url,
     generate_summary,
+    generate_quiz,
     generate_gist,
 )
 
@@ -65,6 +66,10 @@ async def upload_video(
         prompt = instructions.strip() or "Provide a concise summary of this video."
         summary = generate_summary(video_id, prompt=prompt)
 
+        # Generate quiz
+        prompt = instructions.strip() or "Generate a quiz for the video."
+        quiz = generate_quiz(video_id, prompt=prompt)
+
         # Generate gist (title, topics, hashtags)
         gist = generate_gist(video_id)
 
@@ -73,6 +78,7 @@ async def upload_video(
         return {
             "video_id": video_id,
             "summary": summary,
+            "quiz": quiz,
             "title": gist.get("title"),
             "topics": gist.get("topics"),
             "hashtags": gist.get("hashtags"),
@@ -105,6 +111,10 @@ async def upload_video_url_endpoint(
         prompt = instructions.strip() or "Provide a concise summary of this video."
         summary = generate_summary(video_id, prompt=prompt)
 
+        # Generate quiz
+        prompt = instructions.strip() or "Generate a quiz for the video."
+        quiz = generate_quiz(video_id, prompt=prompt)
+
         # Gist
         gist = generate_gist(video_id)
 
@@ -113,6 +123,7 @@ async def upload_video_url_endpoint(
         return {
             "video_id": video_id,
             "summary": summary,
+            "quiz": quiz,
             "title": gist.get("title"),
             "topics": gist.get("topics"),
             "hashtags": gist.get("hashtags"),
