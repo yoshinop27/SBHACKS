@@ -1,0 +1,1 @@
+Solve solutions to the problems with the simplest solution possible. Try to solve by writing the least amount of code as possible unless stated otherwise.

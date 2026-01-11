@@ -1,148 +1,128 @@
 import os
+import time
+import logging
 from twelvelabs import TwelveLabs
+from twelvelabs.indexes import IndexesCreateRequestModelsItem
 
-import yt_dlp
-import uuid
-from typing import List, Optional
+# Basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Initialize TwelveLabs client
-# Ensure TL_API_KEY is set in your environment variables or .env file
+# TwelveLabs client
 api_key = os.getenv("TL_API_KEY")
 if not api_key:
-    print("CRITICAL WARNING: TL_API_KEY is not set in environment variables!")
-else:
-    print(f"TL_API_KEY loaded. Length: {len(api_key)}")
-
+    raise RuntimeError("TL_API_KEY not set")
 client = TwelveLabs(api_key=api_key)
 
-# You might need a persistent index for this demo or create one dynamically.
-# For simplicity, we can check for an existing index or create a new one.
-INDEX_NAME = "sbhacks_demo_index"
+INDEX_NAME = "sbhacks_generate_v1"
 
-def get_or_create_index():
+
+def get_or_create_index() -> str:
+    """
+    Return an existing generate-capable index or create one.
+    """
+    # 1) Look for our specific index by name
     try:
-        print("Listing indexes...")
-        indexes = client.indexes.list(page_limit=50) 
-        target_index = None
-        
-        # Determine if 'indexes' is a list or a pager object
-        # The SDK usually returns a generator/pager
-        for index in indexes:
-            if index.name == INDEX_NAME:
-                target_index = index
-                break
-                
-        if not target_index:
-            print(f"Index {INDEX_NAME} not found, creating...")
-            # Ensure engines are valid for the specific plan/region
-            # providing both marengo and pegasus might require a specific tier
-            # We'll try a simpler configuration if this fails, but for now:
-            target_index = client.indexes.create(
-                name=INDEX_NAME,
-                engines=[
-                    {
-                        "name": "marengo2.6", # Updated to use newer version if possible, or stick to 2.6
-                        "options": ["visual", "conversation", "text_in_video"]
-                    },
-                     {
-                        "name": "pegasus1.1", # Updated to pegasus 1.1 if available
-                        "options": ["visual", "conversation"]
-                    }
-                ]
-            )
-            print(f"Created index: {target_index.id}")
-        else:
-            print(f"Found index: {target_index.id}")
-            
-        return target_index.id
+        indexes = list(client.indexes.list(page_limit=50))
+        for idx in indexes:
+            if idx.index_name == INDEX_NAME:
+                logger.info(f"[INDEX] Found existing index: {idx.id} ({INDEX_NAME})")
+                return idx.id
     except Exception as e:
-        print(f"Error in get_or_create_index: {e}")
-        # Re-raise so upper layers catch it
-        raise e
+        logger.warning(f"[INDEX] Listing indexes failed: {e}")
+
+    # 2) Create a new generate-capable index (pegasus1.2)
+    logger.info(f"[INDEX] Creating new index {INDEX_NAME} with pegasus1.2")
+    try:
+        target_index = client.indexes.create(
+            index_name=INDEX_NAME,
+            models=[
+                IndexesCreateRequestModelsItem(
+                    model_name="pegasus1.2",
+                    model_options=["visual", "audio"],
+                )
+            ],
+        )
+        logger.info(f"[INDEX] Created index: {target_index.id}")
+        return target_index.id
+    except TypeError as e:
+        logger.warning(f"[INDEX] Retrying with 'name' param: {e}")
+        target_index = client.indexes.create(
+            name=INDEX_NAME,
+            models=[
+                IndexesCreateRequestModelsItem(
+                    model_name="pegasus1.2",
+                    model_options=["visual", "audio"],
+                )
+            ],
+        )
+        logger.info(f"[INDEX] Created index (fallback): {target_index.id}")
+        return target_index.id
+
 
 def upload_video_file(file_path: str) -> str:
     """
-    Uploads a local file to the TwelveLabs index.
-    Returns the video_id.
+    Upload a local file to TwelveLabs and return the video_id.
     """
-    try:
-        index_id = get_or_create_index()
-        print(f"Uploading {file_path} to index {index_id}...")
-        
-        # Check if file exists
-        if not os.path.exists(file_path):
-             raise Exception(f"File path does not exist: {file_path}")
+    if not os.path.exists(file_path):
+        raise RuntimeError(f"File path does not exist: {file_path}")
 
-        task = client.tasks.create(
-            index_id=index_id,
-            file=file_path
-        )
-        
-        print(f"Task created: {task.id}")
-        
-        import time
-        while True:
-            task_status = client.tasks.retrieve(task.id)
-            print(f"Task Status: {task_status.status}")
-            if task_status.status == "ready":
-                return task_status.video_id
-            elif task_status.status == "failed":
-                raise Exception(f"Video processing failed: {task_status.process.message}")
-            time.sleep(2)
-    except Exception as e:
-        print(f"Error in upload_video_file: {e}")
-        raise e
+    file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
+    if file_size_mb <= 0:
+        raise RuntimeError("File is empty; cannot upload to TwelveLabs.")
 
-def download_youtube_video(url: str, output_dir: str = "downloads") -> str:
-    """
-    Downloads a YouTube video using yt-dlp.
-    Returns the path to the downloaded file.
-    """
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        
-    filename_id = str(uuid.uuid4())
-    ydl_opts = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-        'outtmpl': f'{output_dir}/{filename_id}.%(ext)s',
-        'noplaylist': True,
-    }
+    index_id = get_or_create_index()
+    # SDK expects video_file (not file)
+    task = client.tasks.create(index_id=index_id, video_file=file_path)
+    logger.info(f"[UPLOAD] Task created: {task.id}")
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        # The filename might change due to extension, so we need to find it
-        # Or simpler: just list dir for the uuid
-        
-        # ydl.prepare_filename(info) gives the expected filename
-        filename = ydl.prepare_filename(info)
-        return filename
+    # Poll until ready/failed
+    while True:
+        task_status = client.tasks.retrieve(task.id)
+        logger.info(f"[UPLOAD] Status: {task_status.status}")
+        if task_status.status == "ready":
+            return task_status.video_id
+        if task_status.status == "failed":
+            raise RuntimeError("Video processing failed")
+        time.sleep(2)
 
-def generate_summary(video_id: str, prompt: str = "Provide a detailed summary of this video.") -> str:
+
+def upload_video_url(video_url: str) -> str:
     """
-    Generates a summary for the given video_id using TwelveLabs Generate API.
+    Upload a remote video URL to TwelveLabs and return the video_id.
     """
-    print(f"Generating summary for {video_id}...")
-    
-    # Using the 'summarize' method or 'generate' depending on exact SDK version features
-    # Based on docs: client.generate.text or similar. 
-    # Checking doc provided: client.generate.summarize is available?
-    # The doc says `client.summarize(...)` 
-    
+    if not video_url:
+        raise RuntimeError("video_url is required")
+
+    index_id = get_or_create_index()
+    task = client.tasks.create(index_id=index_id, video_url=video_url)
+    logger.info(f"[UPLOAD_URL] Task created: {task.id} for {video_url}")
+
+    while True:
+        task_status = client.tasks.retrieve(task.id)
+        logger.info(f"[UPLOAD_URL] Status: {task_status.status}")
+        if task_status.status == "ready":
+            return task_status.video_id
+        if task_status.status == "failed":
+            raise RuntimeError("Video processing failed")
+        time.sleep(2)
+
+
+def generate_summary(video_id: str, prompt: str) -> str:
+    """
+    Generate a summary with an optional prompt/instructions.
+    """
     res = client.summarize(
         video_id=video_id,
         type="summary",
-        prompt=prompt
+        prompt=prompt,
     )
-    
     return res.summary
 
+
 def generate_gist(video_id: str) -> dict:
-     res = client.gist(
-        video_id=video_id,
-        types=["title", "topic", "hashtag"]
-    )
-     return {
-         "title": res.title,
-         "topics": res.topics,
-         "hashtags": res.hashtags
-     }
+    """
+    Generate title, topics, hashtags.
+    """
+    res = client.gist(video_id=video_id, types=["title", "topic", "hashtag"])
+    return {"title": res.title, "topics": res.topics, "hashtags": res.hashtags}
