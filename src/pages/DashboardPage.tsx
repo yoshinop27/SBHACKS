@@ -8,7 +8,7 @@ import { UnifiedVideoUpload } from '../components/Video/UnifiedVideoUpload'
 import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
 import SummaryDisplay from '../components/SummaryDisplay'
 
-export default function HomePage() {
+export default function DashboardPage() {
   const { user } = useAuth()
   const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false)
   
