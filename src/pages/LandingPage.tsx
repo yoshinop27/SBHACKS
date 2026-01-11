@@ -278,7 +278,7 @@ export default function LandingPage() {
         color: '#999',
         fontSize: '14px'
       }}>
-        <p style={{ margin: 0 }}>© 2025 LanGain. All rights reserved.</p>
+        <p style={{ margin: 0 }}>© 2026 LanGain. All rights reserved.</p>
       </footer>
 
       <style>
