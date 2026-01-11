@@ -1,6 +1,8 @@
 import os
 import time
 import logging
+import json
+import re
 from twelvelabs import TwelveLabs
 from twelvelabs.indexes import IndexesCreateRequestModelsItem
 
@@ -118,6 +120,61 @@ def generate_summary(video_id: str, prompt: str) -> str:
         prompt=prompt,
     )
     return res.summary
+
+def generate_quiz(video_id: str, prompt: str) -> list:
+    """
+    Generate structured quiz questions based on the video content.
+    Returns a list of question objects with options and correct answer.
+    """
+    quiz_prompt = """Based on this video content, generate exactly 5 multiple choice questions.
+    
+    Return ONLY a valid JSON array with this exact format, no other text:
+    [
+        {
+            "question": "What is the main topic discussed?",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correctAnswer": 0
+        }
+    ]
+    
+    Rules:
+    - Each question must have exactly 4 options
+    - correctAnswer is the index (0-3) of the correct option
+    - Questions should test comprehension of the video content
+    - Return ONLY the JSON array, no markdown or extra text"""
+    
+    res = client.summarize(
+        video_id=video_id,
+        type="summary",
+        prompt=quiz_prompt,
+    )
+    
+    # Parse the JSON response
+    try:
+        # Try to extract JSON from the response
+        response_text = res.summary.strip()
+        
+        # Remove markdown code blocks if present
+        if response_text.startswith("```"):
+            response_text = re.sub(r'^```(?:json)?\n?', '', response_text)
+            response_text = re.sub(r'\n?```$', '', response_text)
+        
+        quiz_data = json.loads(response_text)
+        
+        # Validate structure
+        if isinstance(quiz_data, list) and len(quiz_data) > 0:
+            return quiz_data
+    except (json.JSONDecodeError, Exception) as e:
+        logger.warning(f"[QUIZ] Failed to parse quiz JSON: {e}")
+    
+    # Fallback: return a default quiz structure
+    return [
+        {
+            "question": "What was the main topic of this video?",
+            "options": ["Topic A", "Topic B", "Topic C", "Topic D"],
+            "correctAnswer": 0
+        }
+    ]
 
 
 def generate_gist(video_id: str) -> dict:
