@@ -3,13 +3,13 @@
   bottom: 24px;
   right: 24px;
   width: 320px;
-  background: #1a1a1a;
-  border-radius: 12px;
+  background: white;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   z-index: 999;
   animation: pipSlideIn 0.3s ease-out;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 3px solid #58cc02;
 }
 
 @keyframes pipSlideIn {
@@ -28,56 +28,61 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  background: rgba(0, 0, 0, 0.5);
+  background: #58cc02;
 }
 
 .pip-label {
   font-size: 0.75rem;
-  color: #888;
+  color: white;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
+  font-weight: 800;
+}
+
+.pip-label::before {
+  content: '📺 ';
 }
 
 .pip-actions {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 .pip-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.25);
   border: none;
-  color: #ccc;
+  color: white;
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  font-weight: 700;
 }
 
 .pip-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
 }
 
 .pip-expand:hover {
-  background: rgba(100, 108, 255, 0.3);
-  color: #646cff;
+  background: white;
+  color: #58cc02;
 }
 
 .pip-close:hover {
-  background: rgba(255, 107, 107, 0.3);
-  color: #ff6b6b;
+  background: #ff4b4b;
+  color: white;
 }
 
 .pip-video {
   width: 100%;
   display: block;
   aspect-ratio: 16 / 9;
-  background: #000;
+  background: #3c3c3c;
 }
 
 /* Hide default controls for cleaner look, show on hover */
@@ -111,4 +116,3 @@
     height: 24px;
   }
 }
-

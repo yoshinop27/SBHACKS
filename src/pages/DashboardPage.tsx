@@ -1,22 +1,12 @@
 import { Dialog } from '@reach/dialog'
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { fetchVideosWithScores, fetchRawVideos, type RawVideo } from '../lib/videos'
-import type { VideoWithScore } from '../types/score'
+import { fetchRawVideos, type RawVideo } from '../lib/videos'
 import { Navbar } from '../components/Layout/Navbar'
-import { VideoScoreGallery } from '../components/Video/VideoScoreGallery'
 import { VideoModal } from '../components/Video/VideoModal'
 import { PiPPlayer } from '../components/Video/PiPPlayer'
 import QuizDisplay from '../components/QuizDisplay'
 
 export default function DashboardPage() {
-  const { user } = useAuth()
-
-  // Videos with scores state
-  const [videosWithScores, setVideosWithScores] = useState<VideoWithScore[]>([])
-  const [videosLoading, setVideosLoading] = useState(false)
-  const [videosError, setVideosError] = useState<string | null>(null)
-
   // Raw videos from storage
   const [rawVideos, setRawVideos] = useState<RawVideo[]>([])
   const [rawVideosLoading, setRawVideosLoading] = useState(false)
@@ -31,7 +21,7 @@ export default function DashboardPage() {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const [isPiPMode, setIsPiPMode] = useState(false)
-  const [videoCurrentTime, setVideoCurrentTime] = useState(0)
+  const [videoCurrentTime] = useState(0)
 
   // Ref to track mounted state
   const mountedRef = useRef(true)
@@ -62,40 +52,13 @@ export default function DashboardPage() {
     return () => { mounted = false }
   }, [])
 
-  useEffect(() => {
-    if (!user?.id) return
-
-    let mounted = true
-    async function loadVideos() {
-      setVideosLoading(true)
-      setVideosError(null)
-      try {
-        const data = await fetchVideosWithScores()
-        if (!mounted) return
-        setVideosWithScores(data)
-      } catch (err) {
-        if (!mounted) return
-        setVideosError(err instanceof Error ? err.message : 'Failed to load videos.')
-      } finally {
-        if (!mounted) return
-        setVideosLoading(false)
-      }
-    }
-    loadVideos()
-    return () => {
-      mounted = false
-    }
-  }, [user?.id])
-
   const handleRawVideoClick = async (video: RawVideo) => {
-    // Immediately show video modal
     setCurrentVideoUrl(video.url)
     setIsVideoModalOpen(true)
     setIsPiPMode(false)
     setQuizData(null)
     setIsProcessing(true)
 
-    // Start API call in background
     try {
       const payload = new FormData()
       payload.append('url', video.url)
@@ -127,29 +90,24 @@ export default function DashboardPage() {
     }
   }
 
-  // Handle transition from video modal to PiP + Quiz
   const handleQuizReady = useCallback(() => {
     setIsVideoModalOpen(false)
     setIsPiPMode(true)
     setIsQuizOpen(true)
   }, [])
 
-  // Handle expanding PiP back to fullscreen modal
   const handleExpandPiP = useCallback(() => {
     setIsPiPMode(false)
     setIsVideoModalOpen(true)
   }, [])
 
-  // Handle closing PiP
   const handleClosePiP = useCallback(() => {
     setIsPiPMode(false)
     setCurrentVideoUrl(null)
   }, [])
 
-  // Handle closing video modal
   const handleCloseVideoModal = useCallback(() => {
     setIsVideoModalOpen(false)
-    // If quiz is ready, transition to PiP mode
     if (quizData) {
       setIsPiPMode(true)
       setIsQuizOpen(true)
@@ -158,7 +116,6 @@ export default function DashboardPage() {
     }
   }, [quizData])
 
-  // Handle closing quiz dialog
   const handleCloseQuiz = useCallback(() => {
     setIsQuizOpen(false)
     setIsPiPMode(false)
@@ -166,112 +123,204 @@ export default function DashboardPage() {
     setQuizData(null)
   }, [])
 
+  const languageColors: Record<string, { bg: string, text: string, emoji: string }> = {
+    'Spanish': { bg: '#fff3cd', text: '#856404', emoji: '🇪🇸' },
+    'French': { bg: '#cce5ff', text: '#004085', emoji: '🇫🇷' },
+    'German': { bg: '#f8d7da', text: '#721c24', emoji: '🇩🇪' },
+    'Japanese': { bg: '#ffe5ec', text: '#c71f37', emoji: '🇯🇵' },
+    'Korean': { bg: '#e2e3ff', text: '#4a4e69', emoji: '🇰🇷' },
+    'Italian': { bg: '#d4edda', text: '#155724', emoji: '🇮🇹' },
+    'Portuguese': { bg: '#d1ecf1', text: '#0c5460', emoji: '🇧🇷' },
+    'Chinese': { bg: '#ffeaa7', text: '#d63031', emoji: '🇨🇳' },
+    'Unknown': { bg: '#e9ecef', text: '#495057', emoji: '🌍' },
+  }
+
   return (
-    <div>
+    <div style={{ background: '#f7f7f7', minHeight: '100vh' }}>
       <Navbar />
-      <main style={{ padding: 16, maxWidth: 980, margin: '0 auto' }}>
-        {/* Raw Videos Gallery */}
-        <section style={{ marginBottom: '4rem' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h1 style={{ marginBottom: 4 }}>Raw Videos</h1>
-            <p style={{ marginTop: 0, opacity: 0.8 }}>Click a video to watch and take a language comprehension quiz.</p>
+      <main style={{ padding: '32px 24px', maxWidth: 1100, margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ 
+          marginBottom: '2rem',
+          textAlign: 'center',
+        }}>
+          <h1 style={{ 
+            fontSize: '2.5rem', 
+            marginBottom: '0.5rem',
+            color: '#3c3c3c',
+          }}>
+            <span style={{ marginRight: '12px' }}>📺</span>
+            Start Learning
+          </h1>
+          <p style={{ 
+            color: '#777', 
+            fontSize: '1.1rem',
+            margin: 0,
+          }}>
+            Pick a video and test your language skills with an AI-powered quiz!
+          </p>
+        </div>
+
+        {/* Loading State */}
+        {rawVideosLoading && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '4rem 2rem',
+            background: 'white',
+            borderRadius: '20px',
+            border: '2px solid #e5e5e5',
+          }}>
+            <div style={{ 
+              fontSize: '3rem', 
+              marginBottom: '1rem',
+              animation: 'bounce 1s infinite',
+            }}>🎬</div>
+            <p style={{ color: '#777', fontWeight: 600 }}>Loading videos...</p>
           </div>
+        )}
 
-          {rawVideosLoading && <p>Loading raw videos…</p>}
-          {rawVideosError && (
-            <div role="alert" style={{ color: 'crimson' }}>{rawVideosError}</div>
-          )}
+        {/* Error State */}
+        {rawVideosError && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '3rem 2rem',
+            background: '#fff5f5',
+            borderRadius: '20px',
+            border: '2px solid #ff4b4b',
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>😰</div>
+            <p style={{ color: '#ff4b4b', fontWeight: 700 }}>{rawVideosError}</p>
+          </div>
+        )}
 
-          {!rawVideosLoading && !rawVideosError && rawVideos.length === 0 && (
-            <p style={{ opacity: 0.6 }}>No videos found in storage.</p>
-          )}
+        {/* Empty State */}
+        {!rawVideosLoading && !rawVideosError && rawVideos.length === 0 && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '4rem 2rem',
+            background: 'white',
+            borderRadius: '20px',
+            border: '2px dashed #e5e5e5',
+          }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📭</div>
+            <h2 style={{ color: '#3c3c3c', marginBottom: '0.5rem' }}>No videos yet!</h2>
+            <p style={{ color: '#777' }}>Upload some videos to get started with learning.</p>
+          </div>
+        )}
 
-          {!rawVideosLoading && !rawVideosError && rawVideos.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-              gap: '1rem',
-            }}>
-              {rawVideos.map((video) => (
+        {/* Video Grid */}
+        {!rawVideosLoading && !rawVideosError && rawVideos.length > 0 && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '1.5rem',
+          }}>
+            {rawVideos.map((video, index) => {
+              const langConfig = languageColors[video.language] || languageColors['Unknown']
+              return (
                 <button
                   key={video.name}
                   onClick={() => handleRawVideoClick(video)}
                   disabled={isProcessing}
                   style={{
                     padding: 0,
-                    background: '#242424',
-                    border: '1px solid #333',
-                    borderRadius: '8px',
+                    background: 'white',
+                    border: '2px solid #e5e5e5',
+                    borderRadius: '20px',
                     cursor: isProcessing ? 'not-allowed' : 'pointer',
                     opacity: isProcessing ? 0.6 : 1,
                     textAlign: 'left',
                     transition: 'all 0.2s',
                     overflow: 'hidden',
+                    boxShadow: '0 4px 0 #e5e5e5',
+                    animation: `slideUp 0.3s ease-out ${index * 0.05}s both`,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isProcessing) {
+                      e.currentTarget.style.transform = 'translateY(-4px)'
+                      e.currentTarget.style.boxShadow = '0 8px 0 #e5e5e5'
+                      e.currentTarget.style.borderColor = '#1cb0f6'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 4px 0 #e5e5e5'
+                    e.currentTarget.style.borderColor = '#e5e5e5'
                   }}
                 >
-                  <video
-                    src={video.url}
-                    style={{
-                      width: '100%',
-                      aspectRatio: '1 / 1',
-                      objectFit: 'cover',
-                      display: 'block',
-                      pointerEvents: 'none',
+                  <div style={{ position: 'relative' }}>
+                    <video
+                      src={video.url}
+                      style={{
+                        width: '100%',
+                        aspectRatio: '16 / 9',
+                        objectFit: 'cover',
+                        display: 'block',
+                        pointerEvents: 'none',
+                        background: '#f0f0f0',
+                      }}
+                      preload="metadata"
+                      muted
+                    />
+                    {/* Play overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'rgba(0,0,0,0.3)',
+                      opacity: 0,
+                      transition: 'opacity 0.2s',
                     }}
-                    preload="metadata"
-                    muted
-                  />
-                  <div style={{ padding: '0.75rem', background: '#1a1a1a' }}>
+                      className="play-overlay"
+                    >
+                      <div style={{
+                        width: '60px',
+                        height: '60px',
+                        background: 'white',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                      }}>
+                        <span style={{ fontSize: '1.5rem', marginLeft: '4px' }}>▶</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: '1rem' }}>
                     <span style={{
                       display: 'block',
-                      fontSize: '0.9rem',
-                      fontWeight: 500,
-                      color: '#fff',
-                      marginBottom: '0.5rem',
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      color: '#3c3c3c',
+                      marginBottom: '0.75rem',
                       wordBreak: 'break-word',
                     }}>
                       {video.displayName}
                     </span>
                     <span style={{
-                      display: 'inline-block',
-                      fontSize: '0.7rem',
-                      background: '#333',
-                      color: '#ccc',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.8rem',
+                      background: langConfig.bg,
+                      color: langConfig.text,
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontWeight: 700,
                     }}>
-                      {video.language}
+                      {langConfig.emoji} {video.language}
                     </span>
                   </div>
                 </button>
-              ))}
-            </div>
-          )}
-
-          <hr style={{ opacity: 0.1, margin: '4rem 0' }} />
-        </section>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-          <div>
-            <h1 style={{ marginBottom: 4 }}>Your Videos</h1>
-            <p style={{ marginTop: 0, opacity: 0.8 }}>Your videos and their associated scores and feedback.</p>
+              )
+            })}
           </div>
-        </div>
+        )}
 
-        {videosLoading ? <p>Loading videos…</p> : null}
-        {videosError ? (
-          <div role="alert" style={{ color: 'crimson' }}>
-            {videosError}
-          </div>
-        ) : null}
-
-        {!videosLoading && !videosError ? (
-          <VideoScoreGallery videos={videosWithScores} />
-        ) : null}
-
-        {/* Video Modal - Fullscreen playback */}
+        {/* Video Modal */}
         {currentVideoUrl && (
           <VideoModal
             videoUrl={currentVideoUrl}
@@ -283,7 +332,7 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* PiP Player - Shows when quiz is active */}
+        {/* PiP Player */}
         {currentVideoUrl && (
           <PiPPlayer
             videoUrl={currentVideoUrl}
@@ -306,28 +355,51 @@ export default function DashboardPage() {
               position: 'absolute',
               top: '1rem',
               right: '1rem',
-              background: 'none',
+              background: '#f7f7f7',
               border: 'none',
-              fontSize: '1.5rem',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              fontSize: '1.25rem',
               cursor: 'pointer',
-              opacity: 0.6,
+              color: '#777',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#ff4b4b'
+              e.currentTarget.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#f7f7f7'
+              e.currentTarget.style.color = '#777'
             }}
           >
-            &times;
+            ✕
           </button>
           {quizData && (
             <>
               {quizData.title && (
-                <div style={{ marginBottom: '1rem' }}>
-                  <h2 style={{ margin: 0 }}>{quizData.title}</h2>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h2 style={{ 
+                    margin: 0, 
+                    color: '#3c3c3c',
+                    fontSize: '1.5rem',
+                  }}>
+                    🎯 {quizData.title}
+                  </h2>
                   {quizData.topics && quizData.topics.length > 0 && (
-                    <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       {quizData.topics.map((topic: string) => (
                         <span key={topic} style={{ 
-                          fontSize: '0.75rem', 
-                          background: '#333', 
-                          padding: '0.25rem 0.5rem', 
-                          borderRadius: '4px' 
+                          fontSize: '0.8rem', 
+                          background: '#e2e3ff',
+                          color: '#4a4e69',
+                          padding: '6px 12px', 
+                          borderRadius: '20px',
+                          fontWeight: 600,
                         }}>
                           {topic}
                         </span>
@@ -343,6 +415,20 @@ export default function DashboardPage() {
           )}
         </Dialog>
       </main>
+
+      <style>{`
+        button:hover .play-overlay {
+          opacity: 1 !important;
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
     </div>
   )
 }
