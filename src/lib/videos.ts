@@ -44,12 +44,40 @@ export async function fetchVideosWithScores(): Promise<VideoWithScore[]> {
   return result
 }
 
-export async function createVideo(video: VideoInsert): Promise<void> {
-  const { error } = await supabase
+export async function createVideo(video: VideoInsert): Promise<string> {
+  const { data, error } = await supabase
     .from('Videos')
     .insert({
       url: video.video_link,
       KeyPoints: video.response_data ?? null,
+    })
+    .select('videoid')
+    .single()
+
+  if (error) throw error
+  if (!data) throw new Error('Failed to create video: no data returned')
+  return data.videoid
+}
+
+export async function createScore(videoId: string, score: number, feedback?: string): Promise<void> {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError) {
+    throw new Error(`Failed to get session: ${sessionError.message}`)
+  }
+  
+  const userId = sessionData.session?.user?.id
+  if (!userId) {
+    throw new Error('No authenticated user session found')
+  }
+
+  const { error } = await supabase
+    .from('Scores')
+    .insert({
+      VideoId: videoId,
+      UserId: userId,
+      Score: score,
+      Feedback: feedback ?? null,
+      Date: new Date().toISOString(),
     })
 
   if (error) throw error
