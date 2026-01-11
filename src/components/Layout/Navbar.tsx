@@ -23,7 +23,7 @@ export function Navbar() {
     >
       <div style={{ maxWidth: 980, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
         <Link to="/" style={{ fontWeight: 800 }}>
-          SBHACKS
+          LanGain
         </Link>
         <div style={{ flex: 1 }} />
         {user?.email ? <span style={{ opacity: 0.8, fontSize: 14 }}>{user.email}</span> : null}
