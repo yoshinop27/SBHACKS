@@ -564,9 +564,9 @@ export default function AboutPage() {
 
             <g ref={symbolsRef}>
               <text x="140" y="160" fontSize="28" fill="#646cff" opacity="0.7" fontWeight="bold">中</text>
-              <text x="450" y="200" fontSize="28" fill="#ce82ff" opacity="0.7" fontWeight="bold">א</text>
+              <text x="450" y="200" fontSize="28" fill="#ce82ff" opacity="0.7" fontWeight="bold">مرحبا</text>
               <text x="470" y="360" fontSize="28" fill="#ff9600" opacity="0.7" fontWeight="bold">あ</text>
-              <text x="160" y="420" fontSize="28" fill="#646cff" opacity="0.7" fontWeight="bold">Ω</text>
+              <text x="160" y="420" fontSize="28" fill="#646cff" opacity="0.7" fontWeight="bold">హెల్లో</text>
               <text x="420" y="440" fontSize="28" fill="#ce82ff" opacity="0.7" fontWeight="bold">한</text>
               <text x="120" y="340" fontSize="28" fill="#ff9600" opacity="0.7" fontWeight="bold">ह</text>
             </g>
